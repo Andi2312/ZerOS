@@ -1,4 +1,4 @@
-# Zeros Operating System (Z1.0a)
+# Zeros Operating System (V. 0.1a (a = alpha))
 
 **Zeros** is an experimental operating system developed from scratch, focused on performance and customization. The system includes support for containers, memory and process management, as well as hot-swapping capabilities.
 
