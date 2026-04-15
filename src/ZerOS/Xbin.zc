@@ -1,0 +1,46 @@
+Start
+ Log[info]~{"ZerOS Starting..."}
+ Console[print]~{"ZerOS Starting..."}
+ load[local]~{drivers}
+ if drives == error
+  log[error]~{"not found drivers!!"}
+ else
+  connect{drivers}
+  log[info]~{"succesful connected drivers"}
+  next{step}
+ ---
+ experiment{screen}
+ if display == AVR == LVDS == eDP == Slim == MIPI DSI
+  plug{screen}
+  log[info]~{"screen connected"}
+  check[screen]
+   plug{display}
+   if display == AVR
+    Use{type}~$display
+	log[info]~{"AVR display"}
+   if display == LVDS
+    Use{type}~$display
+	log[info]~{"LVDS display"}
+   if display == eDP
+    Use{type}~$display
+	log[info]~{"eDP display"}
+   if display == Slim
+    Use{type}~$display
+	log[info]~{"Slim display"}
+   if display == MIPI DSI
+    Use{type}~$display
+	log[info]~{"MIPI DSI display"}
+   relive{log}~{console[print]~{"^%%^"}}
+  set[display]~{rate}~{60}
+  set[display]~{resolution}~{1650x720}
+ else
+  log[error]~{"screen not found!!"}
+ next{step} ## следующий шаг
+ --- ## отделение шагов
+ experiment{disk}
+  test{speed}
+   if speed <=500 ## если скорость меньше 500 мб/с
+    log[warning]~{"don't be surprised if the system is slow, you only have 500 MB/s"}
+   else 
+    log[info]~{"your disks norm"}
+END
