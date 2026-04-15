@@ -1,26 +1,19 @@
 # Zeros Operating System (Z1.0a)
 
-**Zeros** — это экспериментальная операционная система, разрабатываемая с нуля, ориентированная на производительность и кастомизацию. Система включает поддержку контейнеров, управления памятью и процессами, а также возможности для горячей замены модулей.
+**Zeros** is an experimental operating system developed from scratch, focused on performance and customization. The system includes support for containers, memory and process management, as well as hot-swapping capabilities.
 
-## Особенности
+## Features
 
-- **Модульная архитектура** — поддержка контейнеров и динамической загрузки/выгрузки модулей.
-- **Управление памятью** — с возможностью оптимизации и использования swap.
-- **Процесс-менеджер** — поддержка различных приоритетов процессов и динамического распределения ресурсов.
-- **Горячая замена модулей** — возможность замены модулей ядра без перезагрузки.
-- **Реализация на языке программирования Z** — система разработана с использованием уникального синтаксиса языка Z.
+- **Modular architecture** - support for containers and dynamic loading/unloading of modules.
+- **Memory management** - with the ability to optimize and use swap.
+- **- **Process Manager** - support for various process priorities and dynamic resource allocation.
+- **Hot Module Replacement** - the ability to replace kernel modules without rebooting.
+- **Implementation in the ZeCode language** - the system is developed using the unique syntax of the ZeCode.
+- **Monolithic core** - A monolithic kernel allows you to run it in a single file instead of dragging files from different parts of the file system
+## Project Structure
 
-## Структура проекта
+- `src/` - the system's source code.
 
-- `src/` — исходный код системы.
-- `docs/` — документация, включая описание архитектуры и API.
-- `scripts/` — вспомогательные скрипты для сборки и настройки.
-- `tests/` — тесты и примеры.
+## Contributors
 
-## Контрибьюторы
-
-- **Автор**: [Silly]
-
-## Документация
-
-Для более подробной документации смотрите раздел `docs/` в проекте.
+- **Author**: [SillyTech (Andi2312)]
