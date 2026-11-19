@@ -1,0 +1,21 @@
+# Сборка и артефакты
+dist/
+*.apk
+*.apk.idsig
+*.dex
+
+# Python
+__pycache__/
+*.pyc
+
+# Windows/IDE
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Секреты и локальные данные
+*.keystore
+*.jks
+trello.json
+hwparam.json
