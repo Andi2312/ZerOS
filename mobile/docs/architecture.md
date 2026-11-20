@@ -1,5 +1,9 @@
 # Архитектура ZerOS Mobile
 
+> Текущее состояние: домашний экран на Swift 2 — **HomeWatch**, стоковый AOSP
+> Launcher3 QuickStep (`../marmite/home/`). Всё, что ниже про ZerOS Home и свой
+> SystemUI, — целевая архитектура, эти части ещё не реализованы.
+
 ## Суть
 
 ZerOS Mobile — **своя оболочка на базе Android** по модели One UI / HyperOS: Android остаётся

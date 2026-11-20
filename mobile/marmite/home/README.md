@@ -1,149 +1,124 @@
-# ZerOS Home 0.0.1
+# HomeWatch — AOSP Launcher3 для Wileyfox Swift 2
 
-Рабочий стол ZerOS по макету **Zero.C Design System 1.0** (референс — колонка
-«ZerOS Mobile (marmite)» на доске). Обычный APK; системные вещи (яркость,
-тёмная тема, «Не беспокоить») делает через root, если он есть.
+Домашний экран ZerOS на Swift 2 — это **стоковый AOSP Launcher3**, флейвор
+`Launcher3QuickStep`, собранный из тега **android-10.0.0_r47** (Android 10,
+Apache-2.0). Свой лаунчер не пишем: берём апстрим, правим только то, что мешает
+ему работать на LineageOS 17.1.
 
-## Версия
+- Пакет: `com.android.launcher3`, activity `com.android.launcher3/.Launcher`
+- Версия APK: `10.0.0-r47` (апстримная, видно, из какого тега собрано)
+- Подпись: `zeroshome.jks` (генерируется при первой сборке)
+- Установка: обратимым Magisk-модулем `homewatch`, который подменяет
+  `system/product/priv-app/TrebuchetQuickStep/TrebuchetQuickStep.apk`
 
-`0.0.1` — первый номер по новой схеме (0.0.x, каждое изменение +0.0.1).
-Содержит root-фикс: `Root.check()` запускает `su` из фонового потока, поэтому
-Magisk показывает запрос; отказ не кешируется. Подтверждено на Swift 2 —
-root выдан, яркость/тема/DND работают. Предыдущий релиз — `1.1` по старой схеме.
+## Что в папке
 
-## Экран
-
-Две страницы, которые листаются пальцем; нижняя навигация общая и в свайпе не
-участвует:
-
-### 1. Стол (прокручивается)
-
-- **Шапка** — коралловый логотип с молнией, слово «Zeros» (Redaction), пилюля
-  версии `0.0.1`, справа метка `ZERO.C`. Часов в шапке нет намеренно: время уже
-  висит в статус-баре Android 10.
-- **Приветствие** — дата капсом, «Добрый вечер.» и имя коралловым (тап по имени
-  меняет его, хранится в `SharedPreferences`).
-- **Карточка устройства** — модель из `Build`, «Zero.C подключённое
-  устройство», три плитки: температура CPU (термозона, если читается),
-  ОЗУ (фактическая), свободное ПЗУ (фактическое). Сноски под карточкой больше
-  нет.
-- **Приложения** — 8 плиток из раскладки рабочего стола на цветных подложках.
-  «Все →» открывает страницу приложений (или просто листните влево).
-- **Быстрое управление** — яркость, громкость и два круглых переключателя:
-  «Уведомления» и «Тёмная тема».
-
-### 2. Приложения
-
-Полная сетка 4 колонки, листается по вертикали; счётчик приложений, пустое
-состояние. Поиска нет — страница просто листается. Свайп вправо или кнопка
-«Главная» возвращает на стол, «Назад» тоже.
-
-Долгое нажатие на фон — меню рабочего стола; долгое нажатие на плитку —
-«Открыть / Убрать (Добавить) на рабочий стол / О приложении / Удалить».
-
-## Круглые переключатели
-
-`FrameLayout` 58dp с иконкой внутри:
-
-- включено — заливка `#FF6259`, белая иконка, подпись светлая;
-- выключено — обводка `1.4dp` по `#40FFFFFF`, иконка коралловая, подпись
-  серая.
-
-## Root
-
-Разрешения, которые в настройках Android выдать нельзя, лаунчер выдаёт себе сам
-через `su` (Magisk один раз спросит подтверждение):
-
-| Что | Команда |
+| Путь | Что это |
 |---|---|
-| Изменение системных настроек (яркость) | `cmd appops set dev.zeroc.home android:write_settings allow` |
-| Доступ к политике уведомлений | `cmd appops set dev.zeroc.home ACCESS_NOTIFICATION_POLICY allow` |
-| Тёмная тема | `cmd uimode night yes|no` |
-| Не беспокоить | `settings put global zen_mode 0|1` |
-| Яркость | `settings put system screen_brightness <0..255>` + `screen_brightness_mode 0` |
+| `launcher3-q/` | исходник AOSP Launcher3, тег `android-10.0.0_r47`, с нашими правками |
+| `build-l3q.ps1` | сборка APK без Gradle: protoc → aapt2 → javac → d8 → apksigner |
+| `fetch-q-deps.ps1` | скачивает `SystemUI/shared`, `SystemUI/plugin`, `SystemUI/plugin_core` того же тега |
+| `fetch-q-androidx.ps1` | скачивает androidx 1.1.0 / 2.1.0 (AAR → `classes.jar` + `res`) |
+| `fetch-q-deps2.ps1` | собирает `deps-q/`: sysui-патчи, AIDL, proto статистики, system-SDK API 29 |
+| `make_module.py` | упаковывает `dist/Launcher3QuickStep-r47.apk` в Magisk-модуль |
+| `deps/` | `protoc.exe`, рантайм protobuf-javanano, `add_dex.py` |
+| `deps-q/` | шимы (`stats-src`, `compat-src`, `proto`, `gen-aidl`), манифест, sysui-исходники |
 
-`Root.available()` только читает кеш и никогда не запускает `su` (его зовут с
-главного потока); реальная проверка — `Root.check()` на фоновом потоке. Если
-root нет, яркость открывает экран «Изменение системных настроек», тема —
-настройки экрана, «Уведомления» — доступ к «Не беспокоить».
+`deps-q/libs`, `deps-q/res` и большие jar'ы (`android-all-10.jar`,
+`android-system-29.jar`) в репозитории не лежат — их создают скрипты.
 
-## Палитра (Zero.C 1.0)
+## Требования
 
-| Токен | Значение |
+| Что | Где ожидается |
 |---|---|
-| Primary | `#FF6259` |
-| Surface | `#151519` (карточки), `#232327` (плитки) |
-| Background | `#090A0E` |
-| Secondary | `#D6C2C1` |
-| Text / Dim / Muted | `#F5F2F1` / `#9A9498` / `#6C666B` |
+| JDK 21 | `C:\Program Files\Java\jdk-21.0.12.1` или `JAVA_HOME` |
+| `android.jar` (API 33+) для aapt2 | `G:\Android-sdk\platforms\android-36.1\android.jar` |
+| `aapt2.exe` | ищется в кэше Gradle |
+| `r8.jar` | `%TEMP%\opencode\android\r8.jar` |
+| `zipalign.exe`, `apksigner.jar` | `C:\Program Files (x86)\APK Editor Studio\tools` |
+| `protoc.exe` | `deps\tools\protoc.exe` (в репозитории) |
+| python 3, `tar` | в `PATH` |
+| `android-all-10.jar` (125 МБ) | `deps-q\android-all-10.jar`, скачивается вручную |
 
-«Жидкое стекло» — три слоя: аврора (`AuroraView`, коралл/роза/фиолет),
-полупрозрачная панель с кромкой и бликом (`GlassDrawable`), ripple сверху.
-Шрифт — Inter (Regular / Medium / SemiBold), логотип — Redaction.
+`android-all-10.jar` — это framework API 29, скомпилированный для JVM
+(Robolectric): обычный `android.jar` не содержит `com.android.internal.*`,
+которые нужны `SystemUISharedLib`. Только для `javac`, в APK не попадает:
+
+```powershell
+Invoke-WebRequest -UseBasicParsing `
+  -OutFile "deps-q\android-all-10.jar" `
+  "https://repo1.maven.org/maven2/org/robolectric/android-all/10-robolectric-5803371/android-all-10-robolectric-5803371.jar"
+```
 
 ## Сборка
 
+Сборка идёт в `C:\work\aospl3q` (ASCII-путь): `aapt2` и `aidl.exe` ломаются на
+кириллице в пути. Каталог пересоздаётся на каждом запуске.
+
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File "shell\build.ps1"
+cd mobile\marmite\home
+
+# один раз: зависимости, которых нет в исходнике Launcher3
+powershell -NoProfile -ExecutionPolicy Bypass -File .\fetch-q-deps.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\fetch-q-androidx.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File .\fetch-q-deps2.ps1
+
+# сборка
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build-l3q.ps1
 ```
 
-Без Gradle: aapt2 → javac → d8 → apksigner, работа в `%TEMP%\zshome`
-(в пути не должно быть кириллицы). `android.jar` берётся из
-`G:\Android-sdk\platforms\android-36.1\`. Результат — `dist\ZerOS_Home.apk`.
+Результат — `dist\Launcher3QuickStep-r47.apk` (`applicationId
+com.android.launcher3`, minSdk 26, targetSdk 29). Другой рабочий каталог:
+`-Work D:\build\l3q`.
 
 ## Установка
 
-    adb install -r shell\dist\ZerOS_Home.apk
-
-Лаунчер ставится обычным приложением; домашним экраном по умолчанию **не**
-назначается — при первом запуске предложит открыть настройки, выбор за
-пользователем. При первом старте Magisk один раз спросит root — это нормально.
-
-## Где проверено
-
-| Устройство | Экран | Что смотрели |
-|---|---|---|
-| Эмулятор Pixel 4 (Android 10) | 1080×2280, 440 dpi | дашборд 1.0, прокрутка, шторка «Все приложения», поиск с клавиатурой, пустое состояние |
-| Wileyfox Swift 2 (LineageOS 17.1) | 720×1280, 320 dpi | 1.0: первый экран, карточка устройства (45 °C / 1.8 ГБ / 8.9 ГБ), сетка, «Быстрое управление», навбар; 1.1: ставится и запускается; 0.0.1: Magisk выдал root, яркость, тёмная тема и «Не беспокоить» работают |
-
-## Мелочи, которые уже поймали
-
-- **Слайдер забирал фокус** — `ScrollView` при старте прокручивался к `SeekBar`,
-  и шапка с приветствием уезжала за верх экрана. Лечится `setFocusable(false)`
-  на `SeekBar` плюс разовым `scrollTo(0, 0)` после первой раскладки.
-- **Шторка «Все приложения»** красилась в `#F7090A0E`, из-за чего просвечивал
-  фон. Теперь страница непрозрачная, отступы от реальной высоты статус-бара.
-- **Разрешение «Изменение системных настроек»** на LineageOS 17.1 из списка
-  настроек не выдаётся (пункт неактивен) — поэтому appop ставится через root.
-- **`su` с главного потока** вешал первый кадр, пока Magisk показывал запрос —
-  отсюда `available()` / `check()`.
-- **Свайп страниц** не должен перехватывать вертикальную прокрутку: `PagesView`
-  берёт жест только если `|dx| > slop` и `|dx| > |dy| * 1.2`.
-
-## Структура
-
-```
-shell/
-  src/dev/zeroc/home/
-    MainActivity.java   стол + страница приложений, быстрые настройки, навбар
-    PagesView.java      свайп-пейджер «стол ↔ приложения»
-    Root.java           обёртка над su (яркость, тема, DND, appops)
-    AppAdapter.java     сетка страницы приложений
-    AppEntry.java       модель приложения
-    GlassDrawable.java  стеклянная панель
-    AuroraView.java     фон-аврора
-    DesktopPager.java   старый постраничный стол (не используется)
-  res/drawable/         векторные иконки
-  assets/fonts/         Inter + Redaction
-  build.ps1             сборка без Gradle
-  dist/ZerOS_Home.apk   собранный пакет
+```powershell
+python .\make_module.py
+adb push .\dist\HomeWatch-magisk.zip /data/local/tmp/homewatch.zip
+adb shell su -c "magisk --install-module /data/local/tmp/homewatch.zip"
+adb reboot
 ```
 
-## Ограничения
+После перезагрузки домашний экран — HomeWatch, рекасты открываются свайпом
+вверх (или кнопкой «Обзор»). Выключить модуль в Magisk — вернётся штатный
+Trebuchet.
 
-- «Стекло» имитируется: настоящего blur в Android 10 без хаков нет.
-- Иконки приложений — системные, подложка цветная (в макете глифы свои).
-- Сетка на столе — первые 8 приложений раскладки; порядок меняется через
-  долгое нажатие на странице приложений.
-- Тёмная тема влияет на системные элементы и другие приложения; сам лаунчер
-  всегда тёмный по макету.
+Если PackageManager показывает старую версию пакета, удалите кэш и
+перезагрузитесь: `adb shell su -c "rm -rf /data/system/package_cache/*"`.
+
+Проверка:
+
+```powershell
+adb shell dumpsys package com.android.launcher3 | Select-String versionName
+adb shell cmd package resolve-activity --brief com.android.launcher3/.Launcher
+```
+
+## Отклонения от апстрима
+
+Всё остальное — код AOSP без изменений. Правки только под LOS 17.1:
+
+1. `res/values/config.xml`, `quickstep/res/values/strings.xml` —
+   `derived_app_name` = `HomeWatch`.
+2. `PredictionAppTracker.createPredictor` — в прошивке нет сервиса
+   `app_prediction`, поэтому предиктор возвращает `null` вместо падения с
+   `NullPointerException` в `UiThreadHelper`.
+3. `LauncherRecentsView.onTaskLaunchAnimationUpdate` / `redrawLiveTile` —
+   проверка `mRecentsAnimationWrapper == null`: при кнопочной навигации
+   анимация запуска задачи не создаётся.
+4. `deps-q/sysui/.../SystemGestureExclusionListenerCompat.java` — добавлена
+   3-аргументная форма `onSystemGestureExclusionChanged`: её вызывает framework
+   LineageOS 17.1, иначе `AbstractMethodError` в binder-потоке.
+5. `deps-q/sysui/.../PluginManagerImpl.java` — `Thread.get/setUncaughtException
+   PreHandler` (скрытый API libcore) вызывается через `compat-src`-шим, иначе
+   код не компилируется обычным JDK.
+6. `deps-q/stats-src/.../Launcher.java` — protoc 3.1 не создаёт внешние enum'ы
+   при `java_multiple_files`, поэтому интерфейс объявлен вручную.
+
+Правки 4–6 вносятся/проверяются скриптом `fetch-q-deps2.ps1` и лежат в
+репозитории уже применёнными.
+
+## Лицензия
+
+`launcher3-q/` — AOSP Launcher3, Apache License 2.0 (см. `NOTICE` и
+`MODULE_LICENSE_APACHE2` в папке). Скрипты сборки — код ZerOS.

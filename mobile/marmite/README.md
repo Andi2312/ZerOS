@@ -24,34 +24,37 @@
 
 | Путь | Что это |
 |---|---|
-| `home/` | **ZerOS Home** — наш лаунчер (`dev.zeroc.home`), один APK, собирается без Gradle |
+| `home/` | **HomeWatch** — стоковый AOSP Launcher3 (`Launcher3QuickStep`, `android-10.0.0_r47`), исходник и сборка |
 | `firmware/` | `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка LineageOS |
 
-## Сборка ZerOS Home
+## Сборка HomeWatch
 
-Нужны `android.jar` (API 36.1), `d8`, `aapt2`, `apksigner` из build-tools.
-Путь сборки — только ASCII (`%TEMP%`), кириллица ломает `aapt2`:
+Домашний экран — не самописное приложение, а AOSP Launcher3 из
+`android-10.0.0_r47`, собранный без Gradle. Нужны JDK 21, `android.jar`,
+`aapt2`, `d8`, `apksigner`, python; сборка идёт в ASCII-путь (`C:\work`),
+кириллица ломает `aapt2`. Подробности — в `home/README.md`.
 
 ```powershell
-powershell -NoProfile -ExecutionPolicy Bypass -File "home\build.ps1"
-adb install -r "home\dist\ZerOS_Home.apk"
+powershell -NoProfile -ExecutionPolicy Bypass -File "home\fetch-q-deps.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "home\fetch-q-androidx.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "home\fetch-q-deps2.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "home\build-l3q.ps1"
 ```
 
-Версия задаётся в `home/build.ps1` (`$VersionCode` / `$VersionName`) и в шапке
-`MainActivity`; при изменении — +0.0.1.
+Ставится обратимым Magisk-модулем (`home\make_module.py`), который подменяет
+штатный `TrebuchetQuickStep`.
 
 ## Рут
 
-Лаунчеру root нужен для трёх вещей: яркость, системная тёмная тема и «Не
-беспокоить». Первый запуск после установки показывает в Magisk запрос
-«Разрешить root?» для `dev.zeroc.home` — без него переключатели открывают
-штатные настройки Android. Подробности и таблица команд — в `home/README.md`.
+Самому лаунчеру root не нужен. Root (Magisk) нужен только установщику: модуль
+`homewatch` кладёт APK в `system/product/priv-app/TrebuchetQuickStep`. Выключили
+модуль в Magisk — вернулся штатный лаунчер.
 
 ## Как прошивали
 
 Полный порядок — в `firmware/README.md`. Кратко: разблокировка загрузчика →
 TWRP с datafix → LineageOS 17.1 через `flash_los.ps1` → Magisk 31.0 →
-ZerOS Home.
+HomeWatch.
 
 Не трогаем: `preloader`, `lk`, `seccfg`, раздел `recovery` (TWRP остаётся
 рабочим).
