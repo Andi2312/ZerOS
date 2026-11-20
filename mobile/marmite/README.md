@@ -25,7 +25,7 @@
 | Путь | Что это |
 |---|---|
 | `home/` | **HomeWatch** — стоковый AOSP Launcher3 (`Launcher3QuickStep`, `android-10.0.0_r47`), исходник и сборка |
-| `firmware/` | `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка LineageOS |
+| `firmware/` | `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка LineageOS; Magisk-модули `zerobrand` (свойства системы) и `zerosettings` (правка «О телефоне») |
 
 ## Сборка HomeWatch
 

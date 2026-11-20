@@ -25,7 +25,8 @@
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
   `Zeros_marmiter ...`). Файлы `build.prop` не меняются, модуль выключается.
-- Личные файлы прежней системы сохранены локально и в репозиторий не попадают.- Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
+- Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
+- Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
   и в репозиторий не входят: готовая прошивка публикуется в **Releases**.
 
 Важно: `ro.build.display.id` = **TOS317G**, а на 4PDA эта сборка помечена как
@@ -431,6 +432,25 @@ adb reboot
 Откат: выключить модуль в Magisk (или `magisk --remove-module zerobrand`) и
 перезагрузиться. Таблица значений и оговорки (Updater, Lineage SDK) — в
 `zerobrand/README.md`.
+
+## Настройки: «Версия ZerOS»
+
+`zerosettings/` — Magisk-модуль, подменяющий системный
+`Settings.apk` пересобранным: в «О телефоне» → «Версия прошивки» убрана строка
+«Версия API», а «Версия LineageOS» переименована в «Версия ZerOS». Значение
+по-прежнему берётся из `ro.lineage.version` (сейчас `1.0-official-marmite`).
+
+```powershell
+.\zerosettings\build.ps1
+adb push zerosettings\dist\zerosettings-0.0.1.zip /data/local/tmp/zerosettings.zip
+adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
+adb shell su -c "rm -rf /data/system/package_cache"
+adb reboot
+```
+
+APK подписывается платформенным ключом AOSP (`android-10.0.0_r47`), иначе
+настройки теряют signature-разрешения. Подробности — в
+`zerosettings/README.md`.
 
 ## Важно
 
