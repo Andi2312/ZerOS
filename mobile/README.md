@@ -27,6 +27,7 @@ ZerOS Mobile/
 ├─ README.md              этот файл
 ├─ docs/                  спецификации и планы
 │   ├─ architecture.md    слои, процессы, IPC
+│   ├─ palette.md         цвета и токены оформления
 │   ├─ zpk-format.md      формат пакета .zpk
 │   ├─ zeros-api.md       API для приложений (JS/Python)
 │   ├─ build-and-flash.md рут, дампы, прошивка (опционально)

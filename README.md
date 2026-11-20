@@ -10,7 +10,8 @@
 mobile/                     ZerOS Mobile — мобильная часть
 ├─ README.md                идея проекта, столпы, правила
 ├─ docs/
-│  └─ architecture.md       слои, процессы, IPC
+│  ├─ architecture.md       слои, процессы, IPC
+│  └─ palette.md            цвета и токены оформления
 ├─ marmite/                 Wileyfox Swift 2 (кодовое имя marmite)
 │  ├─ README.md             паспорт устройства, сборка, прошивка
 │  ├─ home/                 HomeWatch — AOSP Launcher3 (android-10.0.0_r47)
