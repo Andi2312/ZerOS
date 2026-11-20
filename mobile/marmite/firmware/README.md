@@ -452,6 +452,25 @@ APK подписывается платформенным ключом AOSP (`an
 настройки теряют signature-разрешения. Подробности — в
 `zerosettings/README.md`.
 
+## Обновлятор: «ZerOS 1.0»
+
+`zeroupdater/` — Magisk-модуль, подменяющий `Updater.apk`: в шапке обновлятора
+`ZerOS 1.0` вместо `LineageOS 1.0`, так же в списке сборок. Адреса сервера,
+ссылки на wiki и пути загрузок не тронуты. Подпись — AOSP testkey, как у
+штатного обновлятора.
+
+```powershell
+.\zeroupdater\build.ps1
+adb push zeroupdater\dist\zeroupdater-0.0.1.zip /data/local/tmp/zeroupdater.zip
+adb shell su -c "magisk --install-module /data/local/tmp/zeroupdater.zip"
+adb shell su -c "rm -rf /data/system/package_cache"
+adb reboot
+```
+
+Число в шапке берётся из `ro.lineage.build.version` (`zerobrand`), поэтому
+менять версию можно без пересборки APK. Подробности — в
+`zeroupdater/README.md`.
+
 ## Важно
 
 - **Не закрывать загрузчик обратно.** На Swift 2 после `fastboot oem lock`
