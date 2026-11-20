@@ -22,8 +22,10 @@
   `com.android.launcher3`, сборка `10.0.0-r47`), домашний экран по умолчанию.
   Ставится обратимым Magisk-модулем `homewatch`, который подменяет штатный
   `TrebuchetQuickStep` (исходник и сборка — в `../home/`).
-- Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
-- Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
+- Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
+  LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
+  `Zeros_marmiter ...`). Файлы `build.prop` не меняются, модуль выключается.
+- Личные файлы прежней системы сохранены локально и в репозиторий не попадают.- Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
   и в репозиторий не входят: готовая прошивка публикуется в **Releases**.
 
 Важно: `ro.build.display.id` = **TOS317G**, а на 4PDA эта сборка помечена как
@@ -412,6 +414,23 @@ sync
 Признак того, что в `boot` старый Magisk: в ramdisk (magiskboot unpack) есть
 `overlay.d/sbin/magisk32.xz` и `magisk64.xz`, а `magisk -v` отвечает 22.1 —
 новое приложение такой патч не видит.
+
+## Брендинг ZerOS
+
+`zerobrand/` — Magisk-модуль с `system.prop`: при загрузке `resetprop` меняет
+`ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
+на ZerOS-значения. Системные файлы не трогаются, модуль обратим.
+
+```powershell
+python zerobrand\make_zip.py
+adb push zerobrand\dist\zerobrand-0.0.1.zip /data/local/tmp/zerobrand.zip
+adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
+adb reboot
+```
+
+Откат: выключить модуль в Magisk (или `magisk --remove-module zerobrand`) и
+перезагрузиться. Таблица значений и оговорки (Updater, Lineage SDK) — в
+`zerobrand/README.md`.
 
 ## Важно
 

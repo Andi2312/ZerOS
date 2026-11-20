@@ -1,0 +1,6 @@
+id=zerobrand
+name=ZerOS branding
+version=0.0.1
+versionCode=1
+author=ZeroC
+description=Подменяет строки LineageOS в build.prop на ZerOS. Выключите модуль, чтобы вернуть исходные значения.
