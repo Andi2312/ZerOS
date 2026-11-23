@@ -1,0 +1,6 @@
+# fetched by fetch-q-androidx.ps1 / fetch-q-deps2.ps1
+deps-q/libs/
+deps-q/res/
+deps-q/runtime/
+deps-q/android-all-10.jar
+deps-q/android-system-29.jar
