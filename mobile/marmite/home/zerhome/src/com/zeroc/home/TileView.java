@@ -65,7 +65,10 @@ public class TileView extends View {
         } else {
             icon.setBounds(0, 0, width, height);
         }
+        canvas.save();
+        canvas.clipRect(0, 0, width, height);
         icon.draw(canvas);
+        canvas.restore();
 
         if (mInfo.spanX == 1 && mInfo.spanY == 1) {
             return;

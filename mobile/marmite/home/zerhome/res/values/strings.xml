@@ -15,6 +15,7 @@
     <string name="launch_failed">Не удалось запустить приложение</string>
     <string name="empty_start">Долгое нажатие в списке приложений закрепит плитку здесь</string>
     <string name="alphabet_index">Алфавитный указатель</string>
-    <string name="nav_bar">Навигация: Назад, Пуск, Список приложений</string>
+    <string name="nav_bar">Навигация: Назад, Пуск, Поиск</string>
+    <string name="open_app_list">Список приложений</string>
     <string name="pinned">Плитка добавлена на «Пуск»</string>
 </resources>

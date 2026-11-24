@@ -167,6 +167,13 @@ public class HomeActivity extends Activity {
         hintParams.topMargin = dp(120);
         content.addView(mHint, hintParams);
 
+        AppsButton appsButton = new AppsButton(this);
+        appsButton.setOnClickListener(v -> toggleAppList());
+        FrameLayout.LayoutParams appsParams = new FrameLayout.LayoutParams(
+                dp(52), dp(52), Gravity.BOTTOM | Gravity.END);
+        appsParams.setMargins(0, 0, dp(12), dp(12));
+        content.addView(appsButton, appsParams);
+
         mListPane = new AppListPane(this);
         mListPane.setListener(new AppListPane.Listener() {
             @Override
@@ -209,8 +216,8 @@ public class HomeActivity extends Activity {
             }
 
             @Override
-            public void onApps() {
-                toggleAppList();
+            public void onSearch() {
+                openAppList(true);
             }
         });
         root.addView(navBar, new LinearLayout.LayoutParams(
