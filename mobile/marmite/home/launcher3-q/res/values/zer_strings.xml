@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="zer_nav_back">Back</string>
+    <string name="zer_nav_home">Start</string>
+    <string name="zer_nav_search">Search</string>
+    <string name="zer_all_apps">All apps</string>
+    <string name="zer_search_hint">Search apps</string>
+    <string name="zer_empty">Nothing found</string>
+    <string name="zer_alphabet">Alphabetical index</string>
+</resources>

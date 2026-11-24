@@ -66,5 +66,15 @@
                 android:value="${packageName}.grid_control" />
         </activity>
 
+        <!-- ZerOS: Windows Phone style list of all apps, part of the launcher task. -->
+        <activity
+            android:name="com.android.launcher3.zer.ZerAppListActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:launchMode="standard"
+            android:taskAffinity=""
+            android:theme="@style/ZerAppListTheme"
+            android:windowSoftInputMode="adjustResize" />
+
     </application>
 </manifest>

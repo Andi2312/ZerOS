@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/zer_nav"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="@color/zer_bg"
+    android:orientation="horizontal">
+
+    <ImageButton
+        android:id="@+id/zer_nav_back"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/zer_nav_button"
+        android:contentDescription="@string/zer_nav_back"
+        android:scaleType="center"
+        android:src="@drawable/ic_zer_back" />
+
+    <ImageButton
+        android:id="@+id/zer_nav_home"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/zer_nav_button"
+        android:contentDescription="@string/zer_nav_home"
+        android:scaleType="center"
+        android:src="@drawable/ic_zer_start" />
+
+    <ImageButton
+        android:id="@+id/zer_nav_search"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@drawable/zer_nav_button"
+        android:contentDescription="@string/zer_nav_search"
+        android:scaleType="center"
+        android:src="@drawable/ic_zer_search" />
+</LinearLayout>

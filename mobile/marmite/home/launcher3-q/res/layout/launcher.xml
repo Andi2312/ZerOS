@@ -71,6 +71,33 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" />
 
+        <!-- ZerOS: Start screen chrome, drawn over the hotseat strip. -->
+        <FrameLayout
+            android:id="@+id/zer_home_chrome"
+            android:layout_width="match_parent"
+            android:layout_height="96dp"
+            android:layout_gravity="bottom">
+
+            <include
+                android:id="@+id/zer_nav_bar"
+                layout="@layout/zer_nav_bar"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:layout_gravity="bottom" />
+
+            <ImageButton
+                android:id="@+id/zer_all_apps_button"
+                android:layout_width="44dp"
+                android:layout_height="44dp"
+                android:layout_gravity="end|top"
+                android:layout_marginEnd="12dp"
+                android:layout_marginTop="2dp"
+                android:background="@drawable/zer_nav_button"
+                android:contentDescription="@string/zer_all_apps"
+                android:scaleType="center"
+                android:src="@drawable/ic_zer_arrow_right" />
+        </FrameLayout>
+
     </com.android.launcher3.dragndrop.DragLayer>
 
 </com.android.launcher3.LauncherRootView>

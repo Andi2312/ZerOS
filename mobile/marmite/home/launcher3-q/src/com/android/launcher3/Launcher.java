@@ -136,6 +136,7 @@ import com.android.launcher3.util.ViewOnDrawExecutor;
 import com.android.launcher3.views.ActivityContext;
 import com.android.launcher3.views.OptionsPopupView;
 import com.android.launcher3.views.ScrimView;
+import com.android.launcher3.zer.ZerAppListActivity;
 import com.android.launcher3.widget.LauncherAppWidgetHostView;
 import com.android.launcher3.widget.PendingAddShortcutInfo;
 import com.android.launcher3.widget.PendingAddWidgetInfo;
@@ -229,6 +230,9 @@ public class Launcher extends BaseDraggingActivity implements LauncherExterns,
     private final int[] mTmpAddItemCellCoordinates = new int[2];
 
     @Thunk Hotseat mHotseat;
+
+    // ZerOS: Start screen navigation bar and the "all apps" arrow.
+    private View mZerHomeChrome;
 
     private DropTargetBar mDropTargetBar;
 
@@ -1079,10 +1083,14 @@ public class Launcher extends BaseDraggingActivity implements LauncherExterns,
         mWorkspace.initParentViews(mDragLayer);
         mOverviewPanel = findViewById(R.id.overview_panel);
         mHotseat = findViewById(R.id.hotseat);
+        // ZerOS: the dock is replaced by the three Windows Phone style buttons.
+        mHotseat.setVisibility(View.GONE);
 
         mLauncherView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
                 | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY);
 
         // Setup the drag layer
         mDragLayer.setup(mDragController, mWorkspace);
@@ -1109,6 +1117,68 @@ public class Launcher extends BaseDraggingActivity implements LauncherExterns,
         mDropTargetBar.setup(mDragController);
 
         mAllAppsController.setupViews(mAppsView);
+
+        findViewById(R.id.page_indicator).setVisibility(View.GONE);
+        setupZerHomeChrome();
+    }
+
+    /**
+     * ZerOS: wires the three Start screen buttons and keeps the bar visible only on the
+     * workspace.
+     */
+    private void setupZerHomeChrome() {
+        mZerHomeChrome = findViewById(R.id.zer_home_chrome);
+        if (mZerHomeChrome == null) {
+            return;
+        }
+
+        View allApps = findViewById(R.id.zer_all_apps_button);
+        if (allApps != null) {
+            allApps.setOnClickListener(v ->
+                    startActivity(new Intent(this, ZerAppListActivity.class)));
+        }
+
+        View back = findViewById(R.id.zer_nav_back);
+        if (back != null) {
+            back.setOnClickListener(v -> onBackPressed());
+        }
+
+        View home = findViewById(R.id.zer_nav_home);
+        if (home != null) {
+            home.setOnClickListener(v -> {
+                if (!isInState(NORMAL)) {
+                    mStateManager.goToState(NORMAL);
+                }
+                mWorkspace.setCurrentPage(0);
+            });
+        }
+
+        View search = findViewById(R.id.zer_nav_search);
+        if (search != null) {
+            search.setOnClickListener(v -> {
+                Intent intent = new Intent(this, ZerAppListActivity.class);
+                intent.putExtra(ZerAppListActivity.EXTRA_SEARCH, true);
+                startActivity(intent);
+            });
+        }
+
+        mStateManager.addStateListener(new LauncherStateManager.StateListener() {
+            @Override
+            public void onStateTransitionStart(LauncherState toState) {
+                updateZerHomeChromeVisibility(toState);
+            }
+
+            @Override
+            public void onStateTransitionComplete(LauncherState finalState) {
+                updateZerHomeChromeVisibility(finalState);
+            }
+        });
+    }
+
+    private void updateZerHomeChromeVisibility(LauncherState state) {
+        if (mZerHomeChrome != null) {
+            mZerHomeChrome.setVisibility(state == NORMAL ? View.VISIBLE : View.INVISIBLE);
+        }
     }
 
     /**
