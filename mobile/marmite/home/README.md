@@ -1,178 +1,134 @@
-# HomeWatch — AOSP Launcher3 для Wileyfox Swift 2
+# ZerOS Home — домашний экран Swift 2
 
-Домашний экран ZerOS на Swift 2 — это **стоковый AOSP Launcher3**, флейвор
-`Launcher3QuickStep`, собранный из тега **android-10.0.0_r47** (Android 10,
-Apache-2.0). Свой лаунчер не пишем: берём апстрим, правим только то, что мешает
-ему работать на LineageOS 17.1, и добавляем плитки ZerOS.
+Домашний экран ZerOS написан с нуля, без Launcher3 и без androidx: обычное
+приложение `com.zeroc.home` с activity `.HomeActivity`. Ставится как APK,
+назначается домашним штатной командой Android.
 
-- Пакет: `com.android.launcher3`, activity `com.android.launcher3/.Launcher`
-- Версия APK: `0.1.0-r47` (`ZerOS I 0.1.0`, в основе апстрим `r47`)
-- Подпись: `zeroshome.jks` (генерируется при первой сборке)
-- Установка: обратимым Magisk-модулем `homewatch`, который подменяет
-  `system/product/priv-app/TrebuchetQuickStep/TrebuchetQuickStep.apk`
+- Версия: `0.1.0` (`ZerOS I 0.1.0`)
+- minSdk 26, targetSdk 29, Java 8, зависимости — только framework
+- Подпись: `zeroshome.jks` (генерируется при первой сборке в
+  `%TEMP%\opencode\android\zeroshome.jks`)
 
-## Плитки ZerOS
+## Что умеет
 
-Рабочий стол — сетка **4 × 6**. Каждый ярлык на рабочем столе рисуется плиткой
-в стиле Windows Phone: плоский прямоугольник цвета марсала `#4A0A18`, иконка
-в левом верхнем углу, подпись — в левом нижнем. Цвет нажатия `#5C0D1E`,
-подпись `#F2A6A0` (см. `../../docs/palette.md`).
+### Экран «Пуск»
 
-Размер плитки меняется долгим нажатием → **«Размер плитки»**:
+- Сетка **4 × 6**, плитки 1 × 1, 2 × 2 и 4 × 2; ячейка считается и по ширине,
+  и по высоте, поэтому сетка никогда не уезжает под панель навигации.
+- Фон — системные обои плюс тёмный градиентный скрим; статус-бар прозрачный.
+- Плоская плитка: цветной прямоугольник, иконка приложения в левом верхнем
+  углу, подпись в левом нижнем. У 1 × 1 подписи нет, иконка по центру.
+- Палитра из 8 приглушённых цветов, индекс выбирается хешем компонента:
 
-| Пункт | Занятых ячеек |
-|---|---|
-| 1 × 1 | 1 × 1 |
-| 2 × 1 | 2 × 1 |
-| 2 × 2 | 2 × 2 |
-| 4 × 2 | 4 × 2 |
+  | | | | |
+  |---|---|---|---|
+  | `#0078D7` | `#1F7A6B` | `#C0504D` | `#E36C09` |
+  | `#7A3B8F` | `#2D7D46` | `#A0522D` | `#4A5568` |
 
-Размер хранится в `favorites.spanX/spanY` и переживает перезапуск лаунчера.
-Если в текущем месте плитка нового размера не помещается, она переезжает в
-ближайшее свободное место; если места нет совсем — показывается сообщение.
-Папки и hotseat остаются стоковыми, размер там всегда 1 × 1.
+- Долгое нажатие поднимает плитку и включает перенос; отпускание без движения
+  открывает меню: **размер плитки**, **сменить цвет**, **убрать с экрана**,
+  **информация о приложении**. Плитки хранятся в
+  `shared_prefs/zerhome.xml` строкой `component,col,row,spanX,spanY,color`.
+- При первом запуске Start заполняется сам: звонок 2 × 2, SMS/MMS 2 × 2,
+  браузер 4 × 2, камера / часы / настройки 1 × 1, дальше — свободные
+  приложения. Приложения ищутся по пакету (`dialer`, `messaging`, `jelly`,
+  `snap`, `deskclock`, `settings`), а не только по интенту: так плитка не
+  уедет на чужой лаунчер, перехвативший `DIAL` или `VIEW http`.
+- Удалённые приложения вычищаются из Start при следующей загрузке списка.
+
+### Нижняя панель
+
+Своя чёрная полоса 48 dp: **Назад**, **Пуск**, **Поиск**, нарисованные вручную
+(`NavBarView`). Системный navbar скрывается на время работы лаунчера:
+
+```powershell
+adb shell settings put global policy_control immersive.navigation=com.zeroc.home
+# откат: adb shell settings delete global policy_control
+```
+
+Назад в списке закрывает поиск, второй раз — сам список; на Start ничего не
+делает, как в Windows Phone. Пуск закрывает список, Поиск открывает список с
+полем поиска.
+
+### Список приложений
+
+Полноэкранная панель поверх Start: заголовки по алфавиту, буквенный указатель
+справа, поиск по подписи, «Ничего не найдено» для пустой выдачи. Долгое
+нажатие на строке — **закрепить на «Пуск»** или **информация о приложении**.
+Свой лаунчер в списке скрыт.
 
 ## Что в папке
 
 | Путь | Что это |
 |---|---|
-| `launcher3-q/` | исходник AOSP Launcher3, тег `android-10.0.0_r47`, с нашими правками |
-| `build-l3q.ps1` | сборка APK без Gradle: protoc → aapt2 → javac → d8 → apksigner |
-| `fetch-q-deps.ps1` | скачивает `SystemUI/shared`, `SystemUI/plugin`, `SystemUI/plugin_core` того же тега |
-| `fetch-q-androidx.ps1` | скачивает androidx 1.1.0 / 2.1.0 (AAR → `classes.jar` + `res`) |
-| `fetch-q-deps2.ps1` | собирает `deps-q/`: sysui-патчи, AIDL, proto статистики, system-SDK API 29 |
-| `make_module.py` | упаковывает `dist/Launcher3QuickStep-0.1.0.apk` в Magisk-модуль |
-| `deps/` | `protoc.exe`, рантайм protobuf-javanano, `add_dex.py` |
-| `deps-q/` | шимы (`stats-src`, `compat-src`, `proto`, `gen-aidl`), манифест, sysui-исходники |
-
-`deps-q/libs`, `deps-q/res` и большие jar'ы (`android-all-10.jar`,
-`android-system-29.jar`) в репозитории не лежат — их создают скрипты.
-
-## Требования
-
-| Что | Где ожидается |
-|---|---|
-| JDK 21 | `C:\Program Files\Java\jdk-21.0.12.1` или `JAVA_HOME` |
-| `android.jar` (API 33+) для aapt2 | `G:\Android-sdk\platforms\android-36.1\android.jar` |
-| `aapt2.exe` | ищется в кэше Gradle |
-| `d8.jar` | `G:\Android-sdk\build-tools\*\lib\d8.jar` (если нет `%TEMP%\opencode\android\r8.jar`) |
-| `zipalign.exe`, `apksigner.jar` | `C:\Program Files (x86)\APK Editor Studio\tools` |
-| `protoc.exe` | `deps\tools\protoc.exe` (в репозитории) |
-| python 3, `tar` | в `PATH` |
-| `android-all-10.jar` (125 МБ) | `deps-q\android-all-10.jar`, скачивается вручную |
-
-`android-all-10.jar` — это framework API 29, скомпилированный для JVM
-(Robolectric): обычный `android.jar` не содержит `com.android.internal.*`,
-которые нужны `SystemUISharedLib`. Только для `javac`, в APK не попадает:
-
-```powershell
-Invoke-WebRequest -UseBasicParsing `
-  -OutFile "deps-q\android-all-10.jar" `
-  "https://repo1.maven.org/maven2/org/robolectric/android-all/10-robolectric-5803371/android-all-10-robolectric-5803371.jar"
-```
+| `zerhome/src/com/zeroc/home/HomeActivity.java` | точка входа: сборка UI, загрузка приложений, плитки по умолчанию, запуск |
+| `zerhome/src/com/zeroc/home/TileGrid.java` | сетка 4 × 6, перенос, смена размера, меню плитки |
+| `zerhome/src/com/zeroc/home/TileView.java` | отрисовка одной плитки |
+| `zerhome/src/com/zeroc/home/NavBarView.java` | Назад / Пуск / Поиск |
+| `zerhome/src/com/zeroc/home/AppListPane.java` | список приложений, поиск, указатель, закрепление |
+| `zerhome/src/com/zeroc/home/AppListAdapter.java` | строки и заголовки списка |
+| `zerhome/src/com/zeroc/home/LetterBar.java` | алфавитный указатель |
+| `zerhome/src/com/zeroc/home/AppEntry.java`, `TileInfo.java`, `Palette.java` | модели и палитра |
+| `zerhome/res/` | строки, тема, иконка, строки списка, скрим |
+| `zerhome/build.ps1` | сборка APK: aapt2 → javac → d8 → add_dex → zipalign → apksigner |
+| `zerhome/dist/ZerHome-0.1.0.apk` | готовая сборка |
 
 ## Сборка
 
-Сборка идёт в `C:\work\aospl3q` (ASCII-путь): `aapt2` и `aidl.exe` ломаются на
-кириллице в пути. Каталог пересоздаётся на каждом запуске.
+Проект лежит на кириллическом пути, а `aapt2` на Windows такое не переваривает,
+поэтому `build.ps1` сначала копирует исходники в `C:\work\zerhome`.
 
 ```powershell
-cd mobile\marmite\home
-
-# один раз: зависимости, которых нет в исходнике Launcher3
-powershell -NoProfile -ExecutionPolicy Bypass -File .\fetch-q-deps.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\fetch-q-androidx.ps1
-powershell -NoProfile -ExecutionPolicy Bypass -File .\fetch-q-deps2.ps1
-
-# сборка
-powershell -NoProfile -ExecutionPolicy Bypass -File .\build-l3q.ps1
+cd mobile\marmite\home\zerhome
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 ```
 
-Результат — `dist\Launcher3QuickStep-0.1.0.apk` (`applicationId
-com.android.launcher3`, minSdk 26, targetSdk 29). Другой рабочий каталог:
-`-Work D:\build\l3q`.
+Нужны JDK 21 (`C:\Program Files\Java\jdk-21.0.12.1` или `JAVA_HOME`),
+`android.jar` (`G:\Android-sdk\platforms\android-36.1\android.jar`), `aapt2.exe`
+из кэша Gradle, `d8.jar` из build-tools, `zipalign.exe` и `apksigner.jar` из
+`C:\Program Files (x86)\APK Editor Studio\tools`, python 3.
+
+Результат — `zerhome\dist\ZerHome-0.1.0.apk`.
 
 ## Установка
 
-Штатный путь — Magisk-модуль. На части устройств
-`magisk --install-module` теряет файлы модуля, поэтому надёжнее скопировать
-каталог модуля вручную:
-
 ```powershell
-python .\make_module.py
-adb push .\dist\HomeWatch-magisk.zip /data/local/tmp/homewatch.zip
-adb shell su -c "magisk --install-module /data/local/tmp/homewatch.zip"
-adb reboot
-```
-
-Либо: распаковать `HomeWatch-magisk.zip` в `/data/adb/modules/homewatch/`
-и перезагрузиться. После перезагрузки домашний экран — HomeWatch, рекасты
-открываются свайпом вверх (или кнопкой «Обзор»). Выключить модуль в Magisk —
-вернётся штатный Trebuchet.
-
-Для проверки правок без перезагрузки можно заменить APK в
-`/data/adb/modules/homewatch/system/product/priv-app/TrebuchetQuickStep/` и
-перезапустить процесс:
-
-```powershell
-adb shell su -c "am force-stop com.android.launcher3"
+adb install -r .\zerhome\dist\ZerHome-0.1.0.apk
+adb shell cmd package set-home-activity com.zeroc.home/.HomeActivity
+adb shell settings put global policy_control immersive.navigation=com.zeroc.home
 adb shell am start -a android.intent.action.MAIN -c android.intent.category.HOME
 ```
 
-Если PackageManager показывает старую версию пакета, удалите кэш и
-перезагрузитесь: `adb shell su -c "rm -rf /data/system/package_cache/*"`.
+## Проверка без тапов по экрану
 
-Проверка:
+`HomeActivity` понимает отладочные extras, поэтому список и его секции можно
+открыть из `am start`, а состояние прочитать дампом:
 
 ```powershell
-adb shell dumpsys package com.android.launcher3 | Select-String versionName
-adb shell cmd package resolve-activity --brief com.android.launcher3/.Launcher
+adb shell am start -n com.zeroc.home/.HomeActivity --ez open_apps true
+adb shell am start -n com.zeroc.home/.HomeActivity --ez open_apps true --ez open_search true
+adb shell am start -n com.zeroc.home/.HomeActivity --ez open_apps true --es letter S
+adb shell "uiautomator dump /sdcard/ui.xml; cat /sdcard/ui.xml"
 ```
 
-## Отклонения от апстрима
+Плитки и панель отдают `content-desc` (подпись приложения и «Навигация…»),
+так что дамп показывает, что нарисовано.
 
-Всё остальное — код AOSP без изменений. Правки под LOS 17.1 и плитки ZerOS:
+## Архив: эксперимент с Launcher3
 
-1. `res/values/config.xml`, `quickstep/res/values/strings.xml` —
-   `derived_app_name` = `HomeWatch`.
-2. `PredictionAppTracker.createPredictor` — в прошивке нет сервиса
-   `app_prediction`, поэтому предиктор возвращает `null` вместо падения с
-   `NullPointerException` в `UiThreadHelper`.
-3. `LauncherRecentsView.onTaskLaunchAnimationUpdate` / `redrawLiveTile` —
-   проверка `mRecentsAnimationWrapper == null`: при кнопочной навигации
-   анимация запуска задачи не создаётся.
-4. `deps-q/sysui/.../SystemGestureExclusionListenerCompat.java` — добавлена
-   3-аргументная форма `onSystemGestureExclusionChanged`: её вызывает framework
-   LineageOS 17.1, иначе `AbstractMethodError` в binder-потоке.
-5. `deps-q/sysui/.../PluginManagerImpl.java` — `Thread.get/setUncaughtException
-   PreHandler` (скрытый API libcore) вызывается через `compat-src`-шим, иначе
-   код не компилируется обычным JDK.
-6. `deps-q/stats-src/.../Launcher.java` — protoc 3.1 не создаёт внешние enum'ы
-   при `java_multiple_files`, поэтому интерфейс объявлен вручную.
-7. Плитки:
-   - `src/.../ZerTileView.java` — отрисовка плитки; подключён корнем
-     `res/layout/app_icon.xml` вместо `DoubleShadowBubbleTextView` (только
-     `container == CONTAINER_DESKTOP`, папки и hotseat остаются стоковыми).
-   - `src/.../ZerTileSizer.java` — смена размера: правит `LayoutParams`,
-     occupancy-карту, `WorkspaceItemInfo` и строку в `favorites`.
-   - `src/.../popup/ZerTileShortcut.java` — пункт «Размер плитки» в меню
-     долгого нажатия (зарегистрирован в `SystemShortcutFactory`).
-   - `res/xml/device_profiles.xml` — профиль `4_by_6` / `ZerOS Tiles`
-     (336 × 568 dp, совпадает с `getCurrentSizeRange` на marmite).
-   - `InvariantDeviceProfile.initGrid` — сохранённое имя сетки, отличное от
-     `4_by_6`, игнорируется, чтобы стоковый `4_by_4` не блокировал плитки.
-   - `CellLayout.isRegionFreeForView` / `findNearestFreeRegion` — поиск места
-     при изменении размера.
-   - `model/LoaderTask` — читает `spanX/spanY` для ярлыков рабочего стола;
-     hotseat и папки всегда 1 × 1 (`Workspace.onDrop` сбрасывает размер при
-     переносе плитки в hotseat).
-   - строки `tile_size`, `tile_no_room`, `tile_size_options` (RU/EN) и
-     иконка `zer_ic_tile_size`.
+До этого домашним экраном был форк AOSP Launcher3 (`launcher3-q/`,
+`build-l3q.ps1`, Magisk-модуль `homewatch`). От него остались плитки и правки
+под LineageOS 17.1; как основа лаунчера он больше не используется. Собрать его
+можно по-прежнему:
 
-Правки 4–6 вносятся/проверяются скриптом `fetch-q-deps2.ps1` и лежат в
-репозитории уже применёнными.
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\build-l3q.ps1
+```
+
+Результат — `dist\Launcher3QuickStep-0.1.0.apk`. Подробности правок —
+в истории репозитория.
 
 ## Лицензия
 
 `launcher3-q/` — AOSP Launcher3, Apache License 2.0 (см. `NOTICE` и
-`MODULE_LICENSE_APACHE2` в папке). Скрипты сборки и плитки — код ZerOS.
+`MODULE_LICENSE_APACHE2`). `zerhome/` — код ZerOS.
