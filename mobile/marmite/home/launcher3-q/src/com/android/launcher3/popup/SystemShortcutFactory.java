@@ -37,7 +37,7 @@ public class SystemShortcutFactory implements ResourceBasedOverride {
 
     @SuppressWarnings("unused")
     public SystemShortcutFactory() {
-        this(new SystemShortcut.AppInfo(),
+        this(new ZerTileShortcut(), new SystemShortcut.AppInfo(),
                 new SystemShortcut.Widgets(), new SystemShortcut.Install());
     }
 

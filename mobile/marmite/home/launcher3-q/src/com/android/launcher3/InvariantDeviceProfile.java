@@ -67,6 +67,9 @@ public class InvariantDeviceProfile {
 
     private static final String KEY_IDP_GRID_NAME = "idp_grid_name";
 
+    /** ZerOS: the tile grid built into this launcher. */
+    private static final String ZER_TILE_GRID = "4_by_6";
+
     private static final float ICON_SIZE_DEFINED_IN_APP_DP = 48;
 
     public static final int CHANGE_FLAG_GRID = 1 << 0;
@@ -172,6 +175,14 @@ public class InvariantDeviceProfile {
     }
 
     private String initGrid(Context context, String gridName) {
+        // ZerOS: this launcher is built around the 4x6 tile grid.  A stock
+        // build saved "4_by_4" before the tile grid existed, and a saved name
+        // hides every other grid option, so drop names that cannot be the
+        // tile grid and let the device size pick the profile again.
+        if (gridName != null && !ZER_TILE_GRID.equals(gridName)) {
+            gridName = null;
+        }
+
         WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         Display display = wm.getDefaultDisplay();
         DisplayMetrics dm = new DisplayMetrics();

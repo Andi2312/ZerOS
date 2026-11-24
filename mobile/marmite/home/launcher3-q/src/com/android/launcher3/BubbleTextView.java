@@ -677,4 +677,14 @@ public class BubbleTextView extends TextView implements ItemInfoUpdateReceiver, 
     public int getIconSize() {
         return mIconSize;
     }
+
+    /** ZerOS: current label alpha, so tile views can fade the label with the icon. */
+    protected float getTextAlphaValue() {
+        return mTextAlpha;
+    }
+
+    /** ZerOS: whether the icon is currently drawn (the popup hides it while dragging). */
+    protected boolean isIconVisible() {
+        return mIsIconVisible;
+    }
 }

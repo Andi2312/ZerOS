@@ -96,6 +96,29 @@
     </grid-option>
 
     <grid-option
+        launcher:name="4_by_6"
+        launcher:numRows="6"
+        launcher:numColumns="4"
+        launcher:numFolderRows="4"
+        launcher:numFolderColumns="4"
+        launcher:numHotseatIcons="4"
+        launcher:defaultLayoutId="@xml/default_workspace_4x4" >
+
+        <!-- ZerOS: 4 x 6 cells on a 360 x 640 dp screen, so a 1x1 tile is
+             almost square, like a Windows Phone tile.  The numbers match what
+             InvariantDeviceProfile measures for this panel (smallest app
+             336 x 568 dp); an exact match makes this profile win outright. -->
+        <display-option
+            launcher:name="ZerOS Tiles"
+            launcher:minWidthDps="336"
+            launcher:minHeightDps="568"
+            launcher:iconImageSize="48"
+            launcher:iconTextSize="12.5"
+            launcher:canBeDefault="true" />
+
+    </grid-option>
+
+    <grid-option
         launcher:name="5_by_5"
         launcher:numRows="5"
         launcher:numColumns="5"

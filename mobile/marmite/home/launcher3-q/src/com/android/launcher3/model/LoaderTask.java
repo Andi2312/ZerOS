@@ -528,8 +528,13 @@ public class LoaderTask implements Runnable {
 
                                 info.intent = intent;
                                 info.rank = c.getInt(rankIndex);
-                                info.spanX = 1;
-                                info.spanY = 1;
+                                // ZerOS: workspace shortcuts can be resized into tiles, so
+                                // their span is persisted in the favourites table.  Hotseat
+                                // and folder children always stay one cell.
+                                if (info.container == LauncherSettings.Favorites.CONTAINER_DESKTOP) {
+                                    info.spanX = Math.max(1, c.getInt(spanXIndex));
+                                    info.spanY = Math.max(1, c.getInt(spanYIndex));
+                                }
                                 info.runtimeStatusFlags |= disabledState;
                                 if (isSafeMode && !Utilities.isSystemApp(context, intent)) {
                                     info.runtimeStatusFlags |= FLAG_DISABLED_SAFEMODE;

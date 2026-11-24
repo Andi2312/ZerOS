@@ -2473,6 +2473,56 @@ public class CellLayout extends ViewGroup implements Transposable {
     }
 
     /**
+     * ZerOS: whether a rectangle of the grid can host a view with the given span
+     * without overlapping any child other than {@code ignore}.
+     */
+    public boolean isRegionFreeForView(int cellX, int cellY, int spanX, int spanY, View ignore) {
+        if (cellX < 0 || cellY < 0 || cellX + spanX > mCountX || cellY + spanY > mCountY) {
+            return false;
+        }
+        final int count = mShortcutsAndWidgets.getChildCount();
+        for (int i = 0; i < count; i++) {
+            View child = mShortcutsAndWidgets.getChildAt(i);
+            if (child == ignore) {
+                continue;
+            }
+            CellLayout.LayoutParams lp = (CellLayout.LayoutParams) child.getLayoutParams();
+            boolean intersects = cellX < lp.cellX + lp.cellHSpan
+                    && lp.cellX < cellX + spanX
+                    && cellY < lp.cellY + lp.cellVSpan
+                    && lp.cellY < cellY + spanY;
+            if (intersects) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * ZerOS: finds the free rectangle closest (Manhattan distance) to the given cell.
+     */
+    public boolean findNearestFreeRegion(int cellX, int cellY, int spanX, int spanY, View ignore,
+            int[] outXY) {
+        int bestDistance = Integer.MAX_VALUE;
+        boolean found = false;
+        for (int y = 0; y + spanY <= mCountY; y++) {
+            for (int x = 0; x + spanX <= mCountX; x++) {
+                if (!isRegionFreeForView(x, y, spanX, spanY, ignore)) {
+                    continue;
+                }
+                int distance = Math.abs(x - cellX) + Math.abs(y - cellY);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    outXY[0] = x;
+                    outXY[1] = y;
+                    found = true;
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
      * A drag event has begun over this layout.
      * It may have begun over this layout (in which case onDragChild is called first),
      * or it may have begun on another layout.

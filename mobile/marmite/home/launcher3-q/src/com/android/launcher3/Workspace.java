@@ -1844,6 +1844,13 @@ public class Workspace extends PagedView<WorkspacePageIndicator>
                     }
 
                     final ItemInfo info = (ItemInfo) cell.getTag();
+                    if (container == LauncherSettings.Favorites.CONTAINER_HOTSEAT
+                            && !(cell instanceof LauncherAppWidgetHostView)) {
+                        // ZerOS: a resized workspace tile dropped into the hotseat turns back
+                        // into a normal one-cell icon.
+                        info.spanX = 1;
+                        info.spanY = 1;
+                    }
                     if (hasMovedLayouts) {
                         // Reparent the view
                         CellLayout parentCell = getParentCellLayoutForView(cell);

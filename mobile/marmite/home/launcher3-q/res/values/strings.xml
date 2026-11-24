@@ -175,6 +175,16 @@
     <!-- Strings for the customization mode -->
     <!-- Text for widget add button -->
     <string name="widget_button_text">Widgets</string>
+
+    <!-- ZerOS: tile size action in the long-press menu -->
+    <string name="tile_size">Tile size</string>
+    <string name="tile_no_room">No room for a tile of this size</string>
+    <string-array name="tile_size_options" translatable="false">
+        <item>1 × 1</item>
+        <item>2 × 1</item>
+        <item>2 × 2</item>
+        <item>4 × 2</item>
+    </string-array>
     <!-- Text for wallpaper change button -->
     <string name="wallpaper_button_text">Wallpapers</string>
     <!-- Text for wallpaper change button -->

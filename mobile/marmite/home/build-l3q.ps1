@@ -54,6 +54,11 @@ if (-not (Test-Path $CompileJar)) { $CompileJar = Join-Path $Deps 'android-syste
 if (-not (Test-Path $CompileJar)) { throw "missing $CompileJar (run fetch-q-deps2.ps1)" }
 
 $R8    = Join-Path $env:TEMP 'opencode\android\r8.jar'
+if (-not (Test-Path $R8)) {
+    # d8 lives in the SDK build-tools and ships the same com.android.tools.r8.D8.
+    $R8 = Get-ChildItem 'G:\Android-sdk\build-tools' -Recurse -Filter 'd8.jar' -ErrorAction SilentlyContinue |
+        Sort-Object FullName -Descending | Select-Object -First 1 -ExpandProperty FullName
+}
 $Tools = 'C:\Program Files (x86)\APK Editor Studio\tools'
 foreach ($tool in @($Javac, $R8, (Join-Path $Tools 'zipalign.exe'), (Join-Path $Tools 'apksigner.jar'),
                     (Join-Path $Root 'deps\tools\protoc.exe'))) {
@@ -69,9 +74,9 @@ if (-not $Aapt2 -or -not (Test-Path $Aapt2)) { throw 'aapt2.exe not found in gra
 
 $MinSdk      = 26
 $TargetSdk   = 29
-$VersionCode = 1
-$VersionName = '10.0.0-r47'
-$OutName     = 'Launcher3QuickStep-r47.apk'
+$VersionCode = 2
+$VersionName = '0.1.0-r47'
+$OutName     = 'Launcher3QuickStep-0.1.0.apk'
 $Manifest    = Join-Path $Deps 'AndroidManifest-quickstep.xml'
 
 # 1. clean copy outside the Cyrillic path
