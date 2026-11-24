@@ -8,7 +8,7 @@ import android.view.HapticFeedbackConstants;
 import android.view.MotionEvent;
 import android.view.View;
 
-/** Black bar with Back / Start / Search, drawn Windows Phone style. */
+/** Black bar: Back, Start and the app list button in the right corner. */
 public class NavBarView extends View {
 
     public interface Listener {
@@ -16,12 +16,13 @@ public class NavBarView extends View {
 
         void onHome();
 
-        void onSearch();
+        void onApps();
     }
 
+    private static final int ZONE_NONE = -1;
     private static final int ZONE_BACK = 0;
     private static final int ZONE_HOME = 1;
-    private static final int ZONE_SEARCH = 2;
+    private static final int ZONE_APPS = 2;
 
     private final Paint mBackground = new Paint();
     private final Paint mPress = new Paint(Paint.ANTI_ALIAS_FLAG);
@@ -30,7 +31,7 @@ public class NavBarView extends View {
     private final Path mPath = new Path();
 
     private Listener mListener;
-    private int mPressed = -1;
+    private int mPressed = ZONE_NONE;
 
     public NavBarView(Context context) {
         super(context);
@@ -57,14 +58,19 @@ public class NavBarView extends View {
         int height = getHeight();
         canvas.drawRect(0, 0, width, height, mBackground);
 
-        float zone = width / 3f;
         float cy = height / 2f;
-        if (mPressed >= 0) {
-            canvas.drawCircle(zone * (mPressed + 0.5f), cy, dp(19), mPress);
+        float backX = dp(34);
+        float homeX = width / 2f;
+        float appsX = width - dp(30);
+
+        if (mPressed != ZONE_NONE) {
+            float cx = mPressed == ZONE_BACK ? backX : mPressed == ZONE_HOME ? homeX : appsX;
+            canvas.drawCircle(cx, cy, dp(19), mPress);
         }
-        drawBack(canvas, zone * 0.5f, cy);
-        drawHome(canvas, zone * 1.5f, cy);
-        drawSearch(canvas, zone * 2.5f, cy);
+
+        drawBack(canvas, backX, cy);
+        drawHome(canvas, homeX, cy);
+        drawApps(canvas, appsX, cy);
     }
 
     private void drawBack(Canvas canvas, float cx, float cy) {
@@ -90,12 +96,17 @@ public class NavBarView extends View {
                 left + 2 * size + gap, top + 2 * size + gap, mFill);
     }
 
-    private void drawSearch(Canvas canvas, float cx, float cy) {
-        canvas.drawCircle(cx - dp(1), cy - dp(1), dp(6.2f), mStroke);
-        mPath.reset();
-        mPath.moveTo(cx + dp(3.4f), cy + dp(3.4f));
-        mPath.lineTo(cx + dp(7), cy + dp(7));
-        canvas.drawPath(mPath, mStroke);
+    /** Three list rows: the app list lives behind this button. */
+    private void drawApps(Canvas canvas, float cx, float cy) {
+        float half = dp(4.8f);
+        float step = dp(4.2f);
+        float stroke = dp(1.6f);
+        mStroke.setStrokeWidth(stroke);
+        for (int i = -1; i <= 1; i++) {
+            float y = cy + i * step;
+            canvas.drawLine(cx - half, y, cx + half, y, mStroke);
+        }
+        mStroke.setStrokeWidth(dp(1.4f));
     }
 
     @Override
@@ -115,17 +126,17 @@ public class NavBarView extends View {
             }
             case MotionEvent.ACTION_UP: {
                 int zone = zoneAt(event.getX());
-                if (mPressed >= 0) {
+                if (mPressed != ZONE_NONE) {
                     performHapticFeedback(HapticFeedbackConstants.VIRTUAL_KEY);
                     fire(zone);
                 }
-                mPressed = -1;
+                mPressed = ZONE_NONE;
                 invalidate();
                 performClick();
                 return true;
             }
             case MotionEvent.ACTION_CANCEL:
-                mPressed = -1;
+                mPressed = ZONE_NONE;
                 invalidate();
                 return true;
             default:
@@ -139,8 +150,17 @@ public class NavBarView extends View {
     }
 
     private int zoneAt(float x) {
-        int zone = (int) (x / (getWidth() / 3f));
-        return Math.max(ZONE_BACK, Math.min(ZONE_SEARCH, zone));
+        int width = getWidth();
+        if (width <= 0) {
+            return ZONE_NONE;
+        }
+        if (x < width * 0.34f) {
+            return ZONE_BACK;
+        }
+        if (x < width * 0.72f) {
+            return ZONE_HOME;
+        }
+        return ZONE_APPS;
     }
 
     private void fire(int zone) {
@@ -152,7 +172,7 @@ public class NavBarView extends View {
         } else if (zone == ZONE_HOME) {
             mListener.onHome();
         } else {
-            mListener.onSearch();
+            mListener.onApps();
         }
     }
 

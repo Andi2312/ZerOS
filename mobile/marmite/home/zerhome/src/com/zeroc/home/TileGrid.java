@@ -10,6 +10,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewConfiguration;
 import android.view.ViewGroup;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.Toast;
 
 import java.util.ArrayList;
@@ -101,6 +102,31 @@ public class TileGrid extends ViewGroup {
 
     public boolean isDragging() {
         return mDragging;
+    }
+
+    /** Tiles fall back in from the left, one column after another. */
+    public void animateTilesIn() {
+        for (int i = 0; i < mTiles.size(); i++) {
+            TileView tile = mTiles.get(i);
+            TileInfo info = tile.getInfo();
+            tile.animate().cancel();
+            tile.setTranslationX(-dp(18 + info.col * 16));
+            tile.setAlpha(0f);
+            tile.animate().translationX(0f).alpha(1f)
+                    .setStartDelay(i * 16L)
+                    .setDuration(240)
+                    .setInterpolator(new DecelerateInterpolator(1.5f))
+                    .start();
+        }
+    }
+
+    /** Stops the entrance animation and puts every tile back in place. */
+    public void finishTileAnimations() {
+        for (TileView tile : mTiles) {
+            tile.animate().cancel();
+            tile.setAlpha(1f);
+            tile.setTranslationX(0f);
+        }
     }
 
     public boolean addApp(AppEntry app) {

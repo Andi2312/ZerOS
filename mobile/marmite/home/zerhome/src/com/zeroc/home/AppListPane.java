@@ -7,6 +7,8 @@ import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.AccelerateInterpolator;
+import android.view.animation.DecelerateInterpolator;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -65,7 +67,6 @@ public class AppListPane extends FrameLayout {
 
         mSearchBox = new FrameLayout(context);
         mSearchBox.setBackgroundColor(0xFF0A0A0A);
-        mSearchBox.setVisibility(GONE);
         mSearch = new EditText(context);
         mSearch.setBackground(null);
         mSearch.setSingleLine(true);
@@ -154,9 +155,12 @@ public class AppListPane extends FrameLayout {
         mClosing = false;
         animate().cancel();
         setVisibility(VISIBLE);
-        setAlpha(0f);
-        setTranslationY(dp(28));
-        animate().alpha(1f).translationY(0f).setDuration(200).start();
+        setAlpha(1f);
+        setTranslationY(0f);
+        int width = getWidth() > 0 ? getWidth() : dp(360);
+        setTranslationX(width);
+        animate().translationX(0f).setDuration(260)
+                .setInterpolator(new DecelerateInterpolator(1.6f)).start();
         if (withSearch) {
             post(this::showSearch);
         }
@@ -166,10 +170,12 @@ public class AppListPane extends FrameLayout {
         if (!isOpen() || mClosing) {
             return;
         }
-        hideSearchInternal();
+        clearSearch(false);
         mClosing = true;
         animate().cancel();
-        animate().alpha(0f).translationY(dp(20)).setDuration(160)
+        int width = getWidth() > 0 ? getWidth() : dp(360);
+        animate().translationX(width).setDuration(220)
+                .setInterpolator(new AccelerateInterpolator(1.4f))
                 .withEndAction(() -> {
                     if (mClosing) {
                         setVisibility(GONE);
@@ -183,13 +189,13 @@ public class AppListPane extends FrameLayout {
         return mSearchBox.getVisibility() == VISIBLE;
     }
 
-    /** Returns true when the search field was open and is now closed. */
+    /** Clears the query; returns true when there was something to clear. */
     public boolean hideSearch() {
-        if (!isSearchOpen()) {
-            return false;
+        if (mSearch.getText().length() > 0 || isKeyboardShown()) {
+            clearSearch(true);
+            return true;
         }
-        hideSearchInternal();
-        return true;
+        return false;
     }
 
     private void showSearch() {
@@ -204,16 +210,24 @@ public class AppListPane extends FrameLayout {
         });
     }
 
-    private void hideSearchInternal() {
-        if (isSearchOpen()) {
+    private void clearSearch(boolean hideKeyboard) {
+        if (mSearch.getText().length() > 0) {
             mSearch.setText("");
-            mSearchBox.setVisibility(GONE);
+        }
+        if (hideKeyboard) {
             InputMethodManager imm = (InputMethodManager)
                     getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             if (imm != null) {
                 imm.hideSoftInputFromWindow(mSearch.getWindowToken(), 0);
             }
+            mSearch.clearFocus();
         }
+    }
+
+    private boolean isKeyboardShown() {
+        InputMethodManager imm = (InputMethodManager)
+                getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        return imm != null && imm.isActive(mSearch);
     }
 
     private void rebuild() {

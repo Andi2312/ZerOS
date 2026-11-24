@@ -20,6 +20,7 @@ import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.view.animation.DecelerateInterpolator;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -111,7 +112,7 @@ public class HomeActivity extends Activity {
             return;
         }
         if (intent.getBooleanExtra("open_apps", false)) {
-            mListPane.open(intent.getBooleanExtra("open_search", false));
+            openAppList(intent.getBooleanExtra("open_search", false));
         }
         String letter = intent.getStringExtra("letter");
         if (letter != null) {
@@ -170,7 +171,7 @@ public class HomeActivity extends Activity {
         mListPane.setListener(new AppListPane.Listener() {
             @Override
             public void onLaunch(AppEntry entry) {
-                mListPane.close();
+                closeAppList();
                 launch(entry.component);
             }
 
@@ -204,12 +205,12 @@ public class HomeActivity extends Activity {
 
             @Override
             public void onHome() {
-                mListPane.close();
+                closeAppList();
             }
 
             @Override
-            public void onSearch() {
-                mListPane.open(true);
+            public void onApps() {
+                toggleAppList();
             }
         });
         root.addView(navBar, new LinearLayout.LayoutParams(
@@ -243,9 +244,7 @@ public class HomeActivity extends Activity {
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        if (mListPane != null) {
-            mListPane.close();
-        }
+        closeAppList();
         handleIntent(intent);
     }
 
@@ -265,7 +264,7 @@ public class HomeActivity extends Activity {
     private void handleBack() {
         if (mListPane.isOpen()) {
             if (!mListPane.hideSearch()) {
-                mListPane.close();
+                closeAppList();
             }
             return;
         }
@@ -273,6 +272,59 @@ public class HomeActivity extends Activity {
             mGrid.cancelDrag();
         }
         // Back on the Start screen itself does nothing, as on Windows Phone.
+    }
+
+    private void toggleAppList() {
+        if (mListPane.isOpen()) {
+            closeAppList();
+        } else {
+            openAppList(false);
+        }
+    }
+
+    private void openAppList(boolean withSearch) {
+        animateStartOut();
+        mListPane.open(withSearch);
+    }
+
+    private void closeAppList() {
+        if (mListPane == null) {
+            return;
+        }
+        if (mListPane.isOpen()) {
+            animateStartIn();
+            mListPane.close();
+        } else {
+            mGrid.animate().cancel();
+            if (mGrid.getTranslationX() != 0f) {
+                mGrid.animate().translationX(0f).setDuration(200).start();
+            }
+        }
+    }
+
+    /** Start slides left and out while the app list comes in from the right. */
+    private void animateStartOut() {
+        int width = mGrid.getWidth();
+        if (width <= 0) {
+            return;
+        }
+        mGrid.finishTileAnimations();
+        mGrid.animate().cancel();
+        mGrid.animate().translationX(-width).setDuration(240)
+                .setInterpolator(new DecelerateInterpolator(1.4f)).start();
+    }
+
+    /** Start slides back in and its tiles fall into place from the left. */
+    private void animateStartIn() {
+        int width = mGrid.getWidth();
+        if (width <= 0) {
+            return;
+        }
+        mGrid.animate().cancel();
+        mGrid.setTranslationX(-width);
+        mGrid.animate().translationX(0f).setDuration(240)
+                .setInterpolator(new DecelerateInterpolator(1.4f)).start();
+        mGrid.animateTilesIn();
     }
 
     private void applyImmersiveMode() {
