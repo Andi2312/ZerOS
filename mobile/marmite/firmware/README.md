@@ -3,7 +3,7 @@
 Устройство: Wileyfox Swift 2, `marmite`, MSM8937 (Snapdragon 430), 2/16 ГБ,
 заводская прошивка была Android 7.1.2 (API 25), сборка `TOS317G - N2G48B`.
 
-## Текущее состояние (17.11.2026, вечер)
+## Текущее состояние (25.11.2026)
 
 - Загрузчик **разблокирован** (`ro.boot.flash.locked=0`,
   `verifiedbootstate=orange`).
@@ -18,18 +18,22 @@
   ~0.6 ГБ под ROM и Magisk). Внутренняя память пустая.
 - **Magisk 31.0** стоит поверх **стокового `boot` от LineageOS**
   (`magisk -v` → `31.0:MAGISK:D`).
-- Установлен **HomeWatch** — стоковый AOSP Launcher3 (`Launcher3QuickStep`,
-  `com.android.launcher3`, сборка `10.0.0-r47`), домашний экран по умолчанию.
-  Ставится обратимым Magisk-модулем `homewatch`, который подменяет штатный
-  `TrebuchetQuickStep` (исходник и сборка — в `../home/`).
+- Домашний экран — **штатный лаунчер прошивки**: `com.android.launcher3`,
+  activity `.lineage.LineageLauncher`, APK в
+  `/system/product/priv-app/TrebuchetQuickStep/`. Эксперименты с лаунчерами
+  (HomeWatch, ZerHome) сняты с телефона; исходники остались в `../home/` как
+  архив.
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
-  `Zeros_marmiter ...`). Файлы `build.prop` не меняются, модуль выключается.
+  `Zeros_marmite 0.1.0 ...`, `ro.lineage.version` → `0.1.0-official-marmite`). Файлы
+  `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I
+  0.1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
   и в репозиторий не входят: готовая прошивка публикуется в **Releases**.
 
-Важно: `ro.build.display.id` = **TOS317G**, а на 4PDA эта сборка помечена как
+Важно: заводской `ro.build.display.id` = **TOS317G**, а на 4PDA эта сборка
+помечена как
 **«Россия и СНГ»**. Значит, аппарат из СНГ-партии, и сток качать надо тоже
 CIS (`TOS317G`), а не международный (`TOS319I` / `TOS373J`).
 
@@ -424,7 +428,7 @@ sync
 
 ```powershell
 python zerobrand\make_zip.py
-adb push zerobrand\dist\zerobrand-0.0.1.zip /data/local/tmp/zerobrand.zip
+adb push zerobrand\dist\zerobrand-0.1.0.zip /data/local/tmp/zerobrand.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
 adb reboot
 ```
@@ -438,11 +442,11 @@ adb reboot
 `zerosettings/` — Magisk-модуль, подменяющий системный
 `Settings.apk` пересобранным: в «О телефоне» → «Версия прошивки» убрана строка
 «Версия API», а «Версия LineageOS» переименована в «Версия ZerOS». Значение
-по-прежнему берётся из `ro.lineage.version` (сейчас `1.0-official-marmite`).
+по-прежнему берётся из `ro.lineage.version` (сейчас `0.1.0-official-marmite`).
 
 ```powershell
 .\zerosettings\build.ps1
-adb push zerosettings\dist\zerosettings-0.0.1.zip /data/local/tmp/zerosettings.zip
+adb push zerosettings\dist\zerosettings-0.1.0.zip /data/local/tmp/zerosettings.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot
@@ -452,16 +456,17 @@ APK подписывается платформенным ключом AOSP (`an
 настройки теряют signature-разрешения. Подробности — в
 `zerosettings/README.md`.
 
-## Обновлятор: «ZerOS 1.0»
+## Обновлятор: «ZerOS 0.1.0»
 
 `zeroupdater/` — Magisk-модуль, подменяющий `Updater.apk`: в шапке обновлятора
-`ZerOS 1.0` вместо `LineageOS 1.0`, так же в списке сборок. Адреса сервера,
+`ZerOS` с версией `0.1.0` вместо `LineageOS` с версией `1.0`, так же в списке
+сборок. Адреса сервера,
 ссылки на wiki и пути загрузок не тронуты. Подпись — AOSP testkey, как у
 штатного обновлятора.
 
 ```powershell
 .\zeroupdater\build.ps1
-adb push zeroupdater\dist\zeroupdater-0.0.1.zip /data/local/tmp/zeroupdater.zip
+adb push zeroupdater\dist\zeroupdater-0.1.0.zip /data/local/tmp/zeroupdater.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zeroupdater.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot

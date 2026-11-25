@@ -11,9 +11,9 @@ import zipfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(ROOT, 'dist')
 APK = os.path.join(DIST, 'Settings.apk')
-OUT = os.path.join(DIST, 'zerosettings-0.0.1.zip')
+OUT = os.path.join(DIST, 'zerosettings-0.1.0.zip')
 
-VERSION = '0.0.1'
+VERSION = '0.1.0'
 
 # Тот же путь, что у штатных настроек LineageOS.
 TARGET = 'system/product/priv-app/Settings/Settings.apk'

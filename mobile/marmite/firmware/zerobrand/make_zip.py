@@ -9,7 +9,7 @@ import zipfile
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(ROOT, 'dist')
-VERSION = '0.0.1'
+VERSION = '0.1.0'
 OUT = os.path.join(DIST, 'zerobrand-%s.zip' % VERSION)
 
 

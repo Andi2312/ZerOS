@@ -15,9 +15,9 @@ mobile/                     ZerOS Mobile — мобильная часть
 │  ├─ architecture.md       слои, процессы, IPC
 │  └─ palette.md            цвета и токены оформления
 ├─ marmite/                 Wileyfox Swift 2 (кодовое имя marmite)
-│  ├─ README.md             паспорт устройства, сборка, прошивка
-│  ├─ home/                 HomeWatch — AOSP Launcher3 (android-10.0.0_r47)
-│  └─ firmware/             скрипты прошивки и заметки по руту
+│  ├─ README.md             паспорт устройства, состояние, прошивка
+│  ├─ home/                 архив лаунчера: HomeWatch (AOSP Launcher3) и ZerHome
+│  └─ firmware/             скрипты прошивки, заметки по руту, Magisk-модули
 ```
 
 Каждое устройство — своя папка внутри `mobile/` (`marmite`, дальше по мере
@@ -35,7 +35,7 @@ mobile/                     ZerOS Mobile — мобильная часть
 - Прошивки нумеруются по той же схеме; каждая версия — отдельный тег и архив
   в **Releases**.
 - `ZerOS Home` 1.1 и версии `0.0.x` — история по старой схеме; первый релиз по
-  новой — **ZerOS I 0.1.0**.
+  новой — **ZerOS I 0.1.0** на Wileyfox Swift 2.
 
 ## Релизы
 
@@ -45,9 +45,12 @@ mobile/                     ZerOS Mobile — мобильная часть
 
 ## Сборка
 
-HomeWatch (AOSP Launcher3) собирается без Gradle: `android.jar` + `d8` + `aapt2` +
-`apksigner`. Подробности и грабли — в `mobile/marmite/home/README.md`. Сборка только в
-ASCII-пути (`%TEMP%`, `C:\work`), кириллица в пути ломает `aapt2`.
+Прошивка и модули marmite собираются по инструкциям
+`mobile/marmite/README.md` и `mobile/marmite/firmware/README.md`. В архиве
+`home/` лежат сборки лаунчера без Gradle (`android.jar` + `d8` + `aapt2` +
+`apksigner`) — они не ставятся на телефон, подробности в
+`mobile/marmite/home/README.md`. Сборка только в ASCII-пути (`%TEMP%`,
+`C:\work`): кириллица в пути ломает `aapt2`.
 
 ## Лицензия
 

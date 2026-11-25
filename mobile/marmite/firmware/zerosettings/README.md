@@ -7,7 +7,7 @@ Magisk-модуль подменяет системные настройки Lin
 - строка **«Версия API»** (`lineage_api_version`, Lineage SDK) убрана;
 - строка **«Версия LineageOS»** переименована в **«Версия ZerOS»** — ключ и
   контроллер остались штатными, поэтому значение по-прежнему берётся из
-  `ro.lineage.version` (сейчас `1.0-official-marmite`, см. `../zerobrand/`).
+  `ro.lineage.version` (сейчас `0.1.0-official-marmite`, см. `../zerobrand/`).
 
 Остальные строки экрана не тронуты: версия Android, патч безопасности,
 версия модуля, база, ядро, дата сборки, номер сборки.
@@ -59,7 +59,7 @@ C8:A2:E9:BC:CF:59:7C:2F:B6:DC:66:BE:E2:93:FC:13:F2:FC:47:EC:77:BC:6B:2B:0D:52:C1
 3. декодирует APK, правит `res/xml/firmware_version.xml` и строки
    (`patch_res.py`);
 4. собирает, выравнивает `zipalign -p 4`, подписывает платформенным ключом;
-5. кладёт `dist\Settings.apk` и собирает модуль `dist\zerosettings-0.0.1.zip`.
+5. кладёт `dist\Settings.apk` и собирает модуль `dist\zerosettings-0.1.0.zip`.
 
 Правка ресурсов вынесена в `patch_res.py`: скрипт идемпотентен и падает, если
 разметка изменилась (например, после обновления прошивки).
@@ -67,7 +67,7 @@ C8:A2:E9:BC:CF:59:7C:2F:B6:DC:66:BE:E2:93:FC:13:F2:FC:47:EC:77:BC:6B:2B:0D:52:C1
 ## Установка
 
 ```powershell
-adb push dist\zerosettings-0.0.1.zip /data/local/tmp/zerosettings.zip
+adb push dist\zerosettings-0.1.0.zip /data/local/tmp/zerosettings.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot
@@ -88,9 +88,11 @@ adb pull /sdcard/ui.xml
 В дампе должно быть «Версия ZerOS» и не должно быть «Версия API».
 
 Проверено 20.11.2026 на Swift 2: экран «Версия прошивки» показывает «Версия
-ZerOS → 1.0-official-marmite», строки «Версия API» нет, `logcat -b crash` пуст.
-`md5sum /system/product/priv-app/Settings/Settings.apk` совпадает с собранным
-APK, `lastUpdateTime` обновился после перезагрузки.
+ZerOS → <`ro.lineage.version`>» (тогда `1.0-official-marmite`), строки «Версия
+API» нет, `logcat -b crash` пуст. Значение берётся из `zerobrand`, поэтому после
+перехода на `0.1.0-official-marmite` модуль пересобирать не нужно. `md5sum
+/system/product/priv-app/Settings/Settings.apk` совпадает с собранным APK,
+`lastUpdateTime` обновился после перезагрузки.
 
 ## Откат
 

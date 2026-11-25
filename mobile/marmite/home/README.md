@@ -1,15 +1,21 @@
-# ZerOS Home — домашний экран Swift 2
+# ZerOS Home — архив экспериментов с домашним экраном Swift 2
 
-Домашний экран ZerOS написан с нуля, без Launcher3 и без androidx: обычное
-приложение `com.zeroc.home` с activity `.HomeActivity`. Ставится как APK,
-назначается домашним штатной командой Android.
+> **Архив, на телефоне этого нет.** Домашний экран сейчас — штатный лаунчер
+> прошивки `com.android.launcher3` (`.lineage.LineageLauncher`), см.
+> `../README.md`. Здесь остались исходники двух заброшенных подходов: свой
+> лаунчер ZerHome и форк AOSP Launcher3 (HomeWatch). Собираются по-прежнему,
+> но не устанавливаются.
+
+ZerHome был написан с нуля, без Launcher3 и без androidx: обычное приложение
+`com.zeroc.home` с activity `.HomeActivity`. Ставился как APK и назначался
+домашним штатной командой Android.
 
 - Версия: `0.1.0` (`ZerOS I 0.1.0`)
 - minSdk 26, targetSdk 29, Java 8, зависимости — только framework
 - Подпись: `zeroshome.jks` (генерируется при первой сборке в
   `%TEMP%\opencode\android\zeroshome.jks`)
 
-## Что умеет
+## Что умел
 
 ### Экран «Пуск»
 
@@ -103,7 +109,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\build.ps1
 
 Результат — `zerhome\dist\ZerHome-0.1.0.apk`.
 
-## Установка
+## Как ставился
 
 ```powershell
 adb install -r .\zerhome\dist\ZerHome-0.1.0.apk
@@ -129,10 +135,12 @@ adb shell "uiautomator dump /sdcard/ui.xml; cat /sdcard/ui.xml"
 
 ## Архив: эксперимент с Launcher3
 
-До этого домашним экраном был форк AOSP Launcher3 (`launcher3-q/`,
-`build-l3q.ps1`, Magisk-модуль `homewatch`). От него остались плитки и правки
-под LineageOS 17.1; как основа лаунчера он больше не используется. Собрать его
-можно по-прежнему:
+Ещё раньше домашним экраном был форк AOSP Launcher3 (`launcher3-q/`,
+`build-l3q.ps1`, Magisk-модуль `homewatch`). Он подменял штатный
+`TrebuchetQuickStep`, но с прошивкой не ужился: пакетный менеджер не выдавал
+новому APK привилегии, и лаунчер падал. Модуль снят, слот возвращён прошивке.
+От эксперимента остались плитки и правки под LineageOS 17.1; собрать его можно
+по-прежнему:
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-l3q.ps1

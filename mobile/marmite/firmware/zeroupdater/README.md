@@ -1,4 +1,4 @@
-# zeroupdater — «ZerOS 1.0» в обновляторе
+# zeroupdater — «ZerOS 0.1.0» в обновляторе
 
 Magisk-модуль подменяет системный обновлятор LineageOS
 (`/system/priv-app/Updater/Updater.apk`) на пересобранный с другим названием
@@ -6,11 +6,11 @@ Magisk-модуль подменяет системный обновлятор L
 
 | Было | Стало |
 |---|---|
-| `LineageOS\n1.0` в шапке (`header_title_text`) | `ZerOS\n1.0` |
+| `LineageOS\n1.0` в шапке (`header_title_text`) | `ZerOS\n0.1.0` |
 | `LineageOS %1$s` в списке сборок (`list_build_version`) | `ZerOS %1$s` |
 | `LineageOS %1$s - %2$s` (`list_build_version_date`) | `ZerOS %1$s - %2$s` |
 
-Число (`1.0`) берётся из `ro.lineage.build.version` — его выставляет
+Число (`0.1.0`) берётся из `ro.lineage.build.version` — его выставляет
 `zerobrand/system.prop`, а не этот модуль. Хочешь `ZerOS 2.0` — правь
 `zerobrand` и перезагружайся, APK пересобирать не нужно.
 
@@ -57,7 +57,7 @@ A4:0D:A8:0A:59:D1:70:CA:A9:50:CF:15:C1:8C:45:4D:47:A3:9B:26:98:9D:8B:64:0E:CD:74
 ## Установка
 
 ```powershell
-adb push dist\zeroupdater-0.0.1.zip /data/local/tmp/zeroupdater.zip
+adb push dist\zeroupdater-0.1.0.zip /data/local/tmp/zeroupdater.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zeroupdater.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot
@@ -67,7 +67,7 @@ adb reboot
 закэшированный разбор системного APK.
 
 Проверка: открыть «Настройки → Система → Обновление» или запустить
-`org.lineageos.updater/.UpdatesActivity`, в шапке должно быть `ZerOS` и `1.0`.
+`org.lineageos.updater/.UpdatesActivity`, в шапке должно быть `ZerOS` и `0.1.0`.
 
 ## Откат
 
@@ -79,9 +79,11 @@ adb reboot
 
 ## Оговорки
 
-- Обновлятор по-прежнему ходит на серверы LineageOS: с `ro.lineage.releasetype=OFFICIAL`
-  и `ro.lineage.build.version=1.0` (см. `../zerobrand/`) он может предлагать
-  несуществующие обновления или падать с ошибкой проверки. Название в шапке
-  это не лечит — это отдельная задача.
+- Обновлятор по-прежнему ходит на серверы LineageOS: с
+  `ro.lineage.releasetype=OFFICIAL` и `ro.lineage.build.version=0.1.0`
+  (см. `../zerobrand/`) он может предлагать несуществующие обновления или
+  падать с ошибкой проверки — сборки `0.1.0` для marmite на сервере нет.
+  Название в шапке это не лечит: чтобы обновлятор обновлял ZerOS, нужен свой
+  сервер или GitHub Releases и правка URL.
 - После OTA/перепрошивки обновлятор вернётся стоковым, модуль нужно собрать
   заново.
