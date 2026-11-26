@@ -16,7 +16,7 @@ mobile/                     ZerOS Mobile — мобильная часть
 │  └─ palette.md            цвета и токены оформления
 ├─ marmite/                 Wileyfox Swift 2 (кодовое имя marmite)
 │  ├─ README.md             паспорт устройства, состояние, прошивка
-│  ├─ home/                 архив лаунчера: HomeWatch (AOSP Launcher3) и ZerHome
+│  ├─ home/                 заметка: домашний экран — штатный Trebuchet
 │  └─ firmware/             скрипты прошивки, заметки по руту, Magisk-модули
 ```
 
@@ -46,11 +46,8 @@ mobile/                     ZerOS Mobile — мобильная часть
 ## Сборка
 
 Прошивка и модули marmite собираются по инструкциям
-`mobile/marmite/README.md` и `mobile/marmite/firmware/README.md`. В архиве
-`home/` лежат сборки лаунчера без Gradle (`android.jar` + `d8` + `aapt2` +
-`apksigner`) — они не ставятся на телефон, подробности в
-`mobile/marmite/home/README.md`. Сборка только в ASCII-пути (`%TEMP%`,
-`C:\work`): кириллица в пути ломает `aapt2`.
+`mobile/marmite/README.md` и `mobile/marmite/firmware/README.md`. Сборка только
+в ASCII-пути (`%TEMP%`, `C:\work`): кириллица в пути ломает `aapt2`.
 
 ## Лицензия
 

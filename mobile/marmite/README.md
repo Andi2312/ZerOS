@@ -36,10 +36,11 @@
 
 ## Что в папке
 
-| Путь | Что это |
-|---|---|
-| `firmware/` | `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка LineageOS; Magisk-модули `zerobrand`, `zerosettings`, `zeroupdater` |
-| `home/` | **Архив** экспериментов с домашним экраном: форк AOSP Launcher3 (HomeWatch, `launcher3-q/`) и свой лаунчер ZerHome (`zerhome/`). На телефоне не установлены |
+`firmware/` — `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка
+LineageOS; Magisk-модули `zerobrand`, `zerosettings`, `zeroupdater`.
+
+`home/` — заметка о домашнем экране: эксперименты с лаунчерами (HomeWatch,
+ZerHome) удалены, их исходники остались в истории git.
 
 ## Рут
 

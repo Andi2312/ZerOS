@@ -21,8 +21,8 @@
 - Домашний экран — **штатный лаунчер прошивки**: `com.android.launcher3`,
   activity `.lineage.LineageLauncher`, APK в
   `/system/product/priv-app/TrebuchetQuickStep/`. Эксперименты с лаунчерами
-  (HomeWatch, ZerHome) сняты с телефона; исходники остались в `../home/` как
-  архив.
+  (HomeWatch, ZerHome) сняты с телефона и удалены из репозитория — исходники
+  остались в истории git.
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
   `Zeros_marmite 0.1.0 ...`, `ro.lineage.version` → `0.1.0-official-marmite`). Файлы
