@@ -91,7 +91,10 @@ foreach ($f in @(@('platform.pk8', $Pk8), @('platform.x509.pem', $Pem))) {
     }
 }
 
-$Signed = Join-Path $Dist 'Settings.apk'
+# apksigner (Java) не открывает файл по кириллическому пути, поэтому
+# подписываем в ASCII-каталог $Work, а готовый APK копируем в dist.
+$Signed = Join-Path $Work 'out-signed.apk'
+New-Item -ItemType Directory -Force -Path $Dist | Out-Null
 & $Java -jar $Apksigner sign --key $Pk8 --cert $Pem `
     --min-sdk-version 29 --v1-signing-enabled true --v2-signing-enabled true `
     --out $Signed $Aligned
@@ -102,4 +105,5 @@ if ($LASTEXITCODE -ne 0) { throw 'apksigner verify failed' }
 $got = (& $Keytool -printcert -file $Pem | Select-String 'SHA256:').Line -replace '.*SHA256:\s*', ''
 if ($got.Trim() -ne $WantCert) { throw "platform cert mismatch: $got" }
 
+Copy-Item $Signed (Join-Path $Dist 'Settings.apk') -Force
 & python (Join-Path $Root 'make_module.py')
