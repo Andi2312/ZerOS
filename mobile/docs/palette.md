@@ -32,9 +32,9 @@
 
 На Android 12+ этот же цвет может быть сидом для Monet: из него генерируются
 60 системных цветов (`system_accent*`, `system_neutral*`), и тогда марсала
-красит всю оболочку. Готовый RRO —
-[`../overlays/marsala/`](../overlays/marsala/README.md), применение и замеры —
-в [`a5-tuning.md`](a5-tuning.md).
+красит всю оболочку. Палитра задаётся настройкой
+`theme_customization_overlay_packages` — как это делается, в
+[`a5-tuning.md`](a5-tuning.md).
 
 ## Web / `.zpk`
 

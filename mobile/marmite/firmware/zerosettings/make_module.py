@@ -11,9 +11,9 @@ import zipfile
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DIST = os.path.join(ROOT, 'dist')
 APK = os.path.join(DIST, 'Settings.apk')
-OUT = os.path.join(DIST, 'zerosettings-0.1.0.zip')
+OUT = os.path.join(DIST, 'zerosettings-1.0.zip')
 
-VERSION = '0.1.0'
+VERSION = '1.0'
 
 # Тот же путь, что у штатных настроек LineageOS.
 TARGET = 'system/product/priv-app/Settings/Settings.apk'
@@ -23,7 +23,7 @@ name=ZerOS Settings
 version=%s
 versionCode=1
 author=ZeroC
-description=Настройки с экраном «Версия ZerOS»: убрана строка «Версия API», «Версия LineageOS» переименована. Подписан платформенным ключом AOSP, поэтому system-разрешения сохранены. Выключите модуль, чтобы вернуть штатные настройки.
+description=Настройки с экраном «Версия ZerOS I»: убрана строка «Версия API», «Версия LineageOS» переименована. Подписан платформенным ключом AOSP, поэтому system-разрешения сохранены. Выключите модуль, чтобы вернуть штатные настройки.
 """ % VERSION
 
 

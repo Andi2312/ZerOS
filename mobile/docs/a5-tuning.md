@@ -73,10 +73,9 @@ adb shell killall com.android.systemui
 → `#ffab6069`, `system_neutral2_500` → `#ff837273`. Все 60 цветов совпадают
 с TONAL_SPOT из `#4A0A18` (сверено по `dumpsys overlay`).
 
-Цвета зашиты и в RRO — [`../overlays/marsala/`](../overlays/marsala/README.md);
-он нужен для прошивок без лосевского выбора цвета (и для нашей сборки, где
-оверлей ляжет в `/product/overlay`). На этой прошивке RRO не нужен: палитра
-из настройки переживает перезагрузку и смену обоев.
+Палитра задаётся настройкой `theme_customization_overlay_packages` (JSON
+выше) и переживает перезагрузку и смену обоев. RRO-оверлей не нужен — он
+удалён из репозитория.
 
 ## Замеры
 
@@ -100,12 +99,5 @@ adb shell cmd device_config delete activity_manager max_cached_processes
 (`system_palette` и `accent_color` = `CCEE99`, `theme_style` = `FRUIT_SALAD`),
 затем `adb shell killall com.android.systemui`.
 
-RRO, если он ставился:
-
-```powershell
-adb shell cmd overlay disable org.zer.os.overlay.marsala
-adb shell cmd overlay enable com.android.systemui:accent
-adb shell cmd overlay enable com.android.systemui:neutral
-adb shell killall com.android.systemui
-adb uninstall org.zer.os.overlay.marsala
-```
+RRO в репозитории больше нет: палитра задаётся только настройкой, поэтому
+откат — это возврат прежнего JSON или выбор другого цвета в «Стилях».

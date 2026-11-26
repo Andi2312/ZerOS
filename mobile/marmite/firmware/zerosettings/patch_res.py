@@ -2,7 +2,7 @@
 """Правка ресурсов декодированного Settings.apk: экран «Версия прошивки».
 
 Убирает пункт «Версия API» (LineageApiVersionPreferenceController) и
-переименовывает «Версия LineageOS» в «Версия ZerOS» (ключ и контроллер
+переименовывает «Версия LineageOS» в «Версия ZerOS I» (ключ и контроллер
 остаются штатными, поэтому значение по-прежнему берётся из
 ro.lineage.version).
 
@@ -15,8 +15,8 @@ import sys
 
 XML = 'res/xml/firmware_version.xml'
 STRINGS = [
-    ('res/values/strings.xml', 'zer_version', 'ZerOS version'),
-    ('res/values-ru/strings.xml', 'zer_version', 'Версия ZerOS'),
+    ('res/values/strings.xml', 'zer_version', 'ZerOS I version'),
+    ('res/values-ru/strings.xml', 'zer_version', 'Версия ZerOS I'),
 ]
 
 

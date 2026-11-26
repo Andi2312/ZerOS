@@ -1,13 +1,13 @@
-# zerosettings — «Версия ZerOS» в настройках
+# zerosettings — «Версия ZerOS I» в настройках
 
 Magisk-модуль подменяет системные настройки LineageOS
 (`/system/product/priv-app/Settings/Settings.apk`) на пересобранные с правкой
 экрана **«Версия прошивки»** в «О телефоне»:
 
 - строка **«Версия API»** (`lineage_api_version`, Lineage SDK) убрана;
-- строка **«Версия LineageOS»** переименована в **«Версия ZerOS»** — ключ и
+- строка **«Версия LineageOS»** переименована в **«Версия ZerOS I»** — ключ и
   контроллер остались штатными, поэтому значение по-прежнему берётся из
-  `ro.lineage.version` (сейчас `0.1.0-official-marmite`, см. `../zerobrand/`).
+  `ro.lineage.version` (сейчас `1.0`, см. `../zerobrand/`).
 
 Остальные строки экрана не тронуты: версия Android, патч безопасности,
 версия модуля, база, ядро, дата сборки, номер сборки.
@@ -59,7 +59,7 @@ C8:A2:E9:BC:CF:59:7C:2F:B6:DC:66:BE:E2:93:FC:13:F2:FC:47:EC:77:BC:6B:2B:0D:52:C1
 3. декодирует APK, правит `res/xml/firmware_version.xml` и строки
    (`patch_res.py`);
 4. собирает, выравнивает `zipalign -p 4`, подписывает платформенным ключом;
-5. кладёт `dist\Settings.apk` и собирает модуль `dist\zerosettings-0.1.0.zip`.
+5. кладёт `dist\Settings.apk` и собирает модуль `dist\zerosettings-1.0.zip`.
 
 Правка ресурсов вынесена в `patch_res.py`: скрипт идемпотентен и падает, если
 разметка изменилась (например, после обновления прошивки).
@@ -67,7 +67,7 @@ C8:A2:E9:BC:CF:59:7C:2F:B6:DC:66:BE:E2:93:FC:13:F2:FC:47:EC:77:BC:6B:2B:0D:52:C1
 ## Установка
 
 ```powershell
-adb push dist\zerosettings-0.1.0.zip /data/local/tmp/zerosettings.zip
+adb push dist\zerosettings-1.0.zip /data/local/tmp/zerosettings.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot
@@ -85,12 +85,12 @@ adb shell uiautomator dump /sdcard/ui.xml
 adb pull /sdcard/ui.xml
 ```
 
-В дампе должно быть «Версия ZerOS» и не должно быть «Версия API».
+В дампе должно быть «Версия ZerOS I» и не должно быть «Версия API».
 
 Проверено 20.11.2026 на Swift 2: экран «Версия прошивки» показывает «Версия
-ZerOS → <`ro.lineage.version`>» (тогда `1.0-official-marmite`), строки «Версия
-API» нет, `logcat -b crash` пуст. Значение берётся из `zerobrand`, поэтому после
-перехода на `0.1.0-official-marmite` модуль пересобирать не нужно. `md5sum
+ZerOS I → <`ro.lineage.version`>», строки «Версия API» нет, `logcat -b crash`
+пуст. Значение берётся из `zerobrand`, поэтому после смены версии модуль
+пересобирать не нужно. `md5sum
 /system/product/priv-app/Settings/Settings.apk` совпадает с собранным APK,
 `lastUpdateTime` обновился после перезагрузки.
 

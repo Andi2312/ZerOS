@@ -3,7 +3,7 @@
 Устройство: Wileyfox Swift 2, `marmite`, MSM8937 (Snapdragon 430), 2/16 ГБ,
 заводская прошивка была Android 7.1.2 (API 25), сборка `TOS317G - N2G48B`.
 
-## Текущее состояние (25.11.2026)
+## Текущее состояние (26.11.2026)
 
 - Загрузчик **разблокирован** (`ro.boot.flash.locked=0`,
   `verifiedbootstate=orange`).
@@ -25,9 +25,9 @@
   остались в истории git.
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
-  `Zeros_marmite 0.1.0 ...`, `ro.lineage.version` → `0.1.0-official-marmite`). Файлы
-  `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I
-  0.1.0**.
+  `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`) и ставит свою
+  загрузочную анимацию. Файлы `build.prop` не меняются, модуль выключается.
+  Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
   и в репозиторий не входят: готовая прошивка публикуется в **Releases**.
@@ -427,26 +427,32 @@ sync
 на ZerOS-значения. Системные файлы не трогаются, модуль обратим.
 
 ```powershell
+powershell -File zerobrand\bootanimation\make_bootanimation.ps1   # собрать bootanimation.zip
 python zerobrand\make_zip.py
-adb push zerobrand\dist\zerobrand-0.1.0.zip /data/local/tmp/zerobrand.zip
+adb push zerobrand\dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
 adb reboot
 ```
+
+Загрузочная анимация — чёрный фон, надпись «ZerOS I» акцентным `#F2A6A0`
+с подчёркиванием, 720×1280, 30 fps. Генератор —
+`zerobrand\bootanimation\make_bootanimation.ps1` (размер экрана задаётся
+параметрами `-Width`/`-Height`).
 
 Откат: выключить модуль в Magisk (или `magisk --remove-module zerobrand`) и
 перезагрузиться. Таблица значений и оговорки (Updater, Lineage SDK) — в
 `zerobrand/README.md`.
 
-## Настройки: «Версия ZerOS»
+## Настройки: «Версия ZerOS I»
 
 `zerosettings/` — Magisk-модуль, подменяющий системный
 `Settings.apk` пересобранным: в «О телефоне» → «Версия прошивки» убрана строка
-«Версия API», а «Версия LineageOS» переименована в «Версия ZerOS». Значение
-по-прежнему берётся из `ro.lineage.version` (сейчас `0.1.0-official-marmite`).
+«Версия API», а «Версия LineageOS» переименована в «Версия ZerOS I». Значение
+по-прежнему берётся из `ro.lineage.version` (сейчас `1.0`).
 
 ```powershell
 .\zerosettings\build.ps1
-adb push zerosettings\dist\zerosettings-0.1.0.zip /data/local/tmp/zerosettings.zip
+adb push zerosettings\dist\zerosettings-1.0.zip /data/local/tmp/zerosettings.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot
@@ -456,17 +462,17 @@ APK подписывается платформенным ключом AOSP (`an
 настройки теряют signature-разрешения. Подробности — в
 `zerosettings/README.md`.
 
-## Обновлятор: «ZerOS 0.1.0»
+## Обновлятор: «ZerOS 1.0»
 
 `zeroupdater/` — Magisk-модуль, подменяющий `Updater.apk`: в шапке обновлятора
-`ZerOS` с версией `0.1.0` вместо `LineageOS` с версией `1.0`, так же в списке
-сборок. Адреса сервера,
+`ZerOS` с версией `1.0` (номер из `ro.lineage.build.version`) вместо
+`LineageOS`, так же в списке сборок. Адреса сервера,
 ссылки на wiki и пути загрузок не тронуты. Подпись — AOSP testkey, как у
 штатного обновлятора.
 
 ```powershell
 .\zeroupdater\build.ps1
-adb push zeroupdater\dist\zeroupdater-0.1.0.zip /data/local/tmp/zeroupdater.zip
+adb push zeroupdater\dist\zeroupdater-1.0.zip /data/local/tmp/zeroupdater.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zeroupdater.zip"
 adb shell su -c "rm -rf /data/system/package_cache"
 adb reboot

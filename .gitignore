@@ -1,5 +1,6 @@
 # Сборка и артефакты
 dist/
+bootanimation.zip
 *.apk
 *.apk.idsig
 *.dex
