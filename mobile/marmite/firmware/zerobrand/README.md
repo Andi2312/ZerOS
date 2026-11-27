@@ -1,10 +1,10 @@
 # zerobrand — брендинг ZerOS
 
 Magisk-модуль брендинга: подменяет LineageOS-строки в свойствах системы,
-ставит свою загрузочную анимацию и логотип ZerOS в LineageParts. Файлы
-`build.prop` не меняются, `/system` и `/vendor` не перезаписываются — Magisk
-накладывает их оверлеем. Выключили модуль и перезагрузились — вернулся
-LineageOS.
+ставит свою загрузочную анимацию, обои по умолчанию и логотип ZerOS в
+LineageParts. Файлы `build.prop` не меняются, `/system` и `/vendor` не
+перезаписываются — Magisk накладывает их оверлеем. Выключили модуль и
+перезагрузились — вернулся LineageOS.
 
 ## Что подменяется
 
@@ -78,6 +78,36 @@ powershell -File logo\build_overlay.ps1
 # свои пути: -KeysDir D:\keys -ToolsDir D:\tools
 ```
 
+### Обои по умолчанию
+
+`wallpaper/wallpaper.jpg` — «Орбита», 720×1280, палитра ZerOS.
+`post-fs-data.sh` при первом запуске после установки кладёт картинку в
+`/data/system/users/0/wallpaper` и пишет рядом `wallpaper_info.xml` (id
+сохраняется, размеры и цвета — от новой картинки). Дальше скрипт молчит:
+маркер `/data/adb/zerobrand/wallpaper.applied`, поэтому выбранные потом обои
+не перебиваются.
+
+Почему 720×1280: `ImageWallpaperRenderer` берёт размер полотна из самого файла
+и рисует его 1:1 (в логе загрузки — `surface size=Rect(0, 0 - 720, 1280)`),
+так что картинка шире экрана была бы обрезана по краям, а выше — не заполнила
+бы экран. Заводские обои на marmite тоже 720×1280, хотя в их
+`wallpaper_info.xml` ширина 1440: это «желаемая» ширина для прокрутки, на
+отрисовку она не влияет.
+
+Перед заменой старые обои и их `wallpaper_info.xml` сохраняются в
+`/data/adb/zerobrand/`. `uninstall.sh` вернёт их при удалении модуля, но
+только если обои с тех пор не меняли (сравнивает файл с нашим); если меняли —
+ничего не трогает.
+
+Генератор — `wallpaper/make_wallpapers.py` (numpy + PIL), три варианта:
+`1-horizon` (свечение снизу и линия горизонта), `2-orbit` (концентрические
+кольца и точка, выбран), `3-eclipse` (тёмный диск с акцентной кромкой).
+Готовый `wallpaper/wallpaper.jpg` лежит в git, чтобы сборка модуля не требовала
+Python-пакетов. Чтобы поставить другой вариант, нужно заменить
+`wallpaper/wallpaper.jpg`, удалить на телефоне маркер
+`/data/adb/zerobrand/wallpaper.applied` (бэкап прежних обоев при этом
+сохранится) и перезагрузиться — скрипт отработает заново при загрузке.
+
 ## Сборка и установка
 
 ```powershell
@@ -89,6 +119,9 @@ adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
 adb reboot
 ```
 
+Обои уже лежат готовыми в `wallpaper\wallpaper.jpg`; пересобрать варианты —
+`python wallpaper\make_wallpapers.py`.
+
 Проверка после загрузки:
 
 ```powershell
@@ -96,6 +129,8 @@ adb shell getprop ro.build.display.id
 adb shell getprop ro.lineage.version
 adb shell cmd overlay list | findstr zeroc       # [x] org.zeroc.logo
 adb shell settings get system notification_sound # заводской Argon
+adb shell su -c "ls -l /data/system/users/0/wallpaper"   # 130977 байт
+adb shell logcat -d | findstr ImageWallpaperRenderer     # surface size=Rect(0, 0 - 720, 1280)
 ```
 
 ## Откат
@@ -106,7 +141,8 @@ adb reboot
 ```
 
 Или выключить модуль в приложении Magisk. Вместе с модулем уходят свойства,
-анимация и логотип; звуки остаются заводскими.
+анимация и логотип; `uninstall.sh` возвращает прежние обои, если с тех пор их
+не меняли. Звуки остаются заводскими.
 
 ## Оговорки
 
@@ -128,3 +164,6 @@ adb reboot
   перестанет подменяться, остальное продолжит работать.
 - Splash-экран загрузчика (`раздел splash`, логотип Wileyfox) модуль **не
   трогает**.
+- `wallpaper_info.xml` — служебный файл WallpaperManagerService: при загрузке
+  система может переписать его (ширину приводит к «желаемой» 1440). На
+  отрисовку это не влияет: размер полотна берётся из самого `wallpaper.jpg`.
