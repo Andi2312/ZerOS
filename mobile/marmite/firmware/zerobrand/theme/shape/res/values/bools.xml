@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Форма иконок темы "Silly": roundedrect, как у com.android.theme.icon.roundedrect. -->
+<resources>
+    <bool name="config_useRoundIcon">false</bool>
+</resources>

@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """Собрать Magisk-модуль zerobrand: свойства, загрузочная анимация,
-обои по умолчанию, тема по умолчанию и логотип ZerOS в LineageParts.
+тема по умолчанию и логотип ZerOS в LineageParts.
 
 Модуль подменяет свойства через resetprop и накладывает файлы оверлеем
 Magisk: /system/media/bootanimation.zip и
-/system/product/overlay/ZerOSLogo.apk. Обои (wallpaper/wallpaper.jpg)
-post-fs-data.sh один раз кладёт в /data/system/users/0/wallpaper, тему
-(акцент pink, форма roundedrect, шрифт Rubik) service.sh один раз
-выставляет после первой загрузки. Звуки не трогаются - они заводские.
+/system/product/overlay/ZerOS*.apk. Тема ZerOS (акцент pink, шрифт Rubik,
+форма иконок roundedrect) собрана статическими RRO-оверлеями: они лежат в
+/product/overlay, включаются сами при каждой загрузке и из "Стилей" не
+выключаются. Обои не трогаются - остаются родные Lineage. Звуки заводские.
 
-Перед сборкой анимации и логотипа:
-    powershell -File bootanimation\\make_bootanimation.ps1
+Перед сборкой анимации, темы и логотипа:
+    powershell -File bootanimation\\make_bootanimation_from_video.ps1
+    powershell -File theme\\build_theme.ps1
     powershell -File logo\\build_overlay.ps1
-Обои: wallpaper\\make_wallpapers.py (готовый wallpaper.jpg лежит в git).
 """
 import os
 import zipfile
@@ -26,15 +26,16 @@ OUT = os.path.join(DIST, 'zerobrand-%s.zip' % VERSION)
 BOOT = os.path.join(ROOT, 'bootanimation.zip')
 # RRO-оверлей логотипа: system/product/overlay/ZerOSLogo.apk
 LOGO = os.path.join(ROOT, 'logo', 'ZerOSLogo.apk')
-# Обои по умолчанию (остаются в каталоге модуля, их ставит post-fs-data.sh)
-WALL = os.path.join(ROOT, 'wallpaper', 'wallpaper.jpg')
-WALL_INFO = os.path.join(ROOT, 'wallpaper', 'wallpaper_info.xml')
+# Статические RRO темы: system/product/overlay/ZerOS{Accent,Font,Shape}.apk
+THEME = [os.path.join(ROOT, 'theme', name + '.apk')
+         for name in ('ZerOSAccent', 'ZerOSFont', 'ZerOSShape')]
 
 
 def main():
-    for path, hint in ((BOOT, 'bootanimation\\make_bootanimation.ps1'),
-                       (LOGO, 'logo\\build_overlay.ps1'),
-                       (WALL, 'wallpaper\\make_wallpapers.py')):
+    checks = [(BOOT, 'bootanimation\\make_bootanimation_from_video.ps1'),
+              (LOGO, 'logo\\build_overlay.ps1')]
+    checks += [(p, 'theme\\build_theme.ps1') for p in THEME]
+    for path, hint in checks:
         if not os.path.exists(path):
             raise SystemExit('нет %s - сначала запусти %s' % (path, hint))
 
@@ -42,13 +43,11 @@ def main():
     with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED) as z:
         z.write(os.path.join(ROOT, 'module.prop'), 'module.prop')
         z.write(os.path.join(ROOT, 'system.prop'), 'system.prop')
-        z.write(os.path.join(ROOT, 'post-fs-data.sh'), 'post-fs-data.sh')
-        z.write(os.path.join(ROOT, 'service.sh'), 'service.sh')
         z.write(os.path.join(ROOT, 'uninstall.sh'), 'uninstall.sh')
         z.write(BOOT, 'system/media/bootanimation.zip')
         z.write(LOGO, 'system/product/overlay/ZerOSLogo.apk')
-        z.write(WALL, 'wallpaper/wallpaper.jpg')
-        z.write(WALL_INFO, 'wallpaper/wallpaper_info.xml')
+        for path in THEME:
+            z.write(path, 'system/product/overlay/' + os.path.basename(path))
     print('OK:', OUT, os.path.getsize(OUT), 'байт')
 
 

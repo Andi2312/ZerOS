@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Шрифт темы "Silly": Rubik, как у org.lineageos.overlay.font.rubik.
+     Самих TTF в оверлее нет - семейства rubik/rubik-medium лежат в системе
+     (/system/etc/fonts.xml), оверлей только выбирает их по умолчанию. -->
+<resources>
+    <string name="config_bodyFontFamily">rubik</string>
+    <string name="config_bodyFontFamilyMedium">rubik-medium</string>
+    <string name="config_headlineFontFamily">rubik</string>
+    <string name="config_headlineFontFamilyMedium">rubik-medium</string>
+    <string name="zeroc_font_label">ZerOS Rubik</string>
+</resources>

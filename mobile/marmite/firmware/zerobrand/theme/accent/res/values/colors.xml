@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Акцент темы "Silly": тот же pink, что у org.lineageos.overlay.accent.pink. -->
+<resources>
+    <color name="accent_device_default_dark">#ffe6125e</color>
+    <color name="accent_device_default_light">#ffe6125e</color>
+</resources>

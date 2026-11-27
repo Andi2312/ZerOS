@@ -1,6 +1,6 @@
 id=zerobrand
 name=ZerOS branding
 version=1.0
-versionCode=12
+versionCode=13
 author=ZeroC
-description=ZerOS I: свойства системы, своя загрузочная анимация, обои и тема по умолчанию, логотип ZerOS в LineageParts. Выключить — отключить модуль в Magisk, после перезагрузки вернётся LineageOS.
+description=ZerOS I: свойства системы, своя загрузочная анимация, тема ZerOS по умолчанию (pink, Rubik, скруглённые иконки), логотип ZerOS в LineageParts. Выключить — отключить модуль в Magisk, после перезагрузки вернётся LineageOS.

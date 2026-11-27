@@ -26,7 +26,7 @@
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
   `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`), ставит свою
-  загрузочную анимацию, обои и тему по умолчанию, логотип ZerOS в LineageParts.
+  загрузочную анимацию, тему по умолчанию, логотип ZerOS в LineageParts.
   Файлы `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
@@ -425,12 +425,13 @@ sync
 `zerobrand/` — Magisk-модуль: `system.prop` (при загрузке `resetprop` меняет
 `ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
 на ZerOS-значения), загрузочная анимация (клип `bootanimation/zeros.mp4`:
-«ZeroS» и плывущие линии, пинг-понг-цикл), обои и тема по умолчанию, логотип
+«ZeroS» и плывущие линии, пинг-понг-цикл), тема по умолчанию, логотип
 ZerOS в LineageParts. Звуки заводские. Системные файлы не перезаписываются,
 модуль обратим.
 
 ```powershell
 powershell -File zerobrand\bootanimation\make_bootanimation_from_video.ps1   # bootanimation.zip из видео (ffmpeg + 7z)
+powershell -File zerobrand\theme\build_theme.ps1                  # три статических RRO темы
 powershell -File zerobrand\logo\build_overlay.ps1                 # собрать RRO-оверлей логотипа
 python zerobrand\make_zip.py
 adb push zerobrand\dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
@@ -446,20 +447,15 @@ adb reboot
 вперёд и назад — 268 кадров в цикле `part0` без рывков. Прежний вариант с
 надписью «ZerOS I» рисует `make_bootanimation.ps1` — оставлен запасным.
 
-Обои — «Орбита» (`zerobrand\wallpaper\wallpaper.jpg`, 720×1280): тёмный фон,
-концентрические кольца и точка акцентным `#F2A6A0`, генератор —
-`zerobrand\wallpaper\make_wallpapers.py` (ещё варианты «Горизонт» и
-«Затмение»). `post-fs-data.sh` один раз кладёт картинку в
-`/data/system/users/0/wallpaper` при установке модуля, дальше выбор
-пользователя не перебивает; при удалении модуля `uninstall.sh` возвращает
-прежние обои, если их не меняли.
+Обои — родные Lineage, модуль их не трогает: свои с телефона убраны,
+прежние возвращены из бэкапа (картинка и `wallpaper_info.xml`). Звуки тоже
+заводские.
 
-Тема по умолчанию — акцент «pink», шрифт Rubik, форма иконок roundedrect.
-`service.sh` выставляет её один раз после первой загрузки с модулем (в
-`post-fs-data.sh` нельзя: до `system_server` нет `settings` и `cmd overlay`):
-включает эти оверлеи, гасит чужие акценты/шрифты/формы и пишет выбор в
-`theme_customization_overlay_packages`; маркер —
-`/data/adb/zerobrand/theme.applied`. Встроенную тему ROM модуль не меняет.
+Тема по умолчанию — акцент «pink», шрифт Rubik, форма иконок roundedrect —
+вшита тремя статическими RRO-оверлеями (`org.zeroc.theme.accent`,
+`.font`, `.shape`): они лежат в `/system/product/overlay`, включаются сами
+при каждой загрузке и из «Стилей» не выключаются. Исходники —
+`zerobrand\theme\`, сборка `powershell -File zerobrand\theme\build_theme.ps1`.
 Подробности и откат — в `zerobrand\README.md`.
 
 Звуки — заводские: свои `.ogg` в модуль больше не входят, звук отключения

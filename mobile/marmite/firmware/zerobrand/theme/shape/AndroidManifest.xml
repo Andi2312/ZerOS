@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="org.zeroc.theme.shape"
+    android:versionCode="1"
+    android:versionName="1.0">
+    <overlay
+        android:targetPackage="android"
+        android:category="android.theme.customization.adaptive_icon_shape"
+        android:priority="0"
+        android:isStatic="true" />
+    <application
+        android:hasCode="false"
+        android:label="@string/zeroc_shape_label" />
+</manifest>
