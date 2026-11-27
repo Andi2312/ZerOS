@@ -2,9 +2,15 @@
 make_bootanimation.ps1 — собирает bootanimation.zip для ZerOS.
 
 Рисует на чёрном фоне надпись «ZerOS I» акцентным цветом палитры
-(#F2A6A0): плавное появление, потом держится до конца загрузки.
+(#F2A6A0) с чертой: сначала плавное появление (part0, играет один раз),
+потом лёгкая пульсация (part1, крутится, пока идёт загрузка).
 
 Разрешение задаётся под устройство (marmite — Wileyfox Swift 2, 720x1280).
+
+Упаковка — через python: zipfile.ZIP_STORED. PowerShell 5.1 (.NET
+Framework) с CompressionLevel.NoCompression всё равно жмёт кадры deflate,
+а Android bootanimation читает только stored (method 0) — иначе чёрный
+экран вместо анимации.
 
 Запуск:
     powershell -NoProfile -ExecutionPolicy Bypass -File .\make_bootanimation.ps1
@@ -16,7 +22,8 @@ param(
     [int]$Height = 1280,
     [int]$Fps = 30,
     [int]$FadeFrames = 24,
-    [int]$HoldFrames = 36,
+    [int]$PulseFrames = 90,
+    [int]$PulseMin = 205,
     [string]$Text = 'ZerOS I',
     [string]$Out = ''
 )
@@ -27,10 +34,10 @@ Add-Type -AssemblyName System.Drawing
 $Root = Split-Path -Parent $MyInvocation.MyCommand.Path
 if (-not $Out) { $Out = Join-Path (Split-Path -Parent $Root) 'bootanimation.zip' }
 
-$Frames = $FadeFrames + $HoldFrames
 $Tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("zeros-boot-" + [Guid]::NewGuid().ToString('N').Substring(0, 8))
-$Part = Join-Path $Tmp 'part0'
-New-Item -ItemType Directory -Force -Path $Part | Out-Null
+$Part0 = Join-Path $Tmp 'part0'
+$Part1 = Join-Path $Tmp 'part1'
+New-Item -ItemType Directory -Force -Path $Part0, $Part1 | Out-Null
 
 $Accent = [System.Drawing.Color]::FromArgb(255, 242, 166, 160)   # zer-on-accent #F2A6A0
 $Bg = [System.Drawing.Color]::Black
@@ -59,15 +66,7 @@ $barW = [Math]::Round($textSize.Width * 0.9)
 $barY = [Math]::Round($cy + $textSize.Height * 0.52)
 $barH = [Math]::Max(2, [Math]::Round($Height * 0.004))
 
-Write-Host ("кадров: {0} ({1}x{2}, {3} fps)" -f $Frames, $Width, $Height, $Fps)
-
-for ($i = 0; $i -lt $Frames; $i++) {
-    $alpha = 255
-    if ($i -lt $FadeFrames) {
-        $t = ($i + 1) / [double]$FadeFrames
-        $alpha = [int][Math]::Round(255 * [Math]::Pow($t, 1.6))
-    }
-
+function Save-Frame([int]$alpha, [string]$file) {
     $g.Clear($Bg)
 
     $textColor = [System.Drawing.Color]::FromArgb($alpha, $Accent)
@@ -76,7 +75,6 @@ for ($i = 0; $i -lt $Frames; $i++) {
     $g.DrawString($Text, $font, $brush, $rect, $fmt)
     $brush.Dispose()
 
-    # акцентная черта под надписью: растёт вместе с появлением
     $barAlpha = [int][Math]::Round($alpha * 0.7)
     $w = [Math]::Max(1, [int][Math]::Round($barW * ($alpha / 255.0)))
     $barColor = [System.Drawing.Color]::FromArgb($barAlpha, $Accent)
@@ -84,8 +82,24 @@ for ($i = 0; $i -lt $Frames; $i++) {
     $g.FillRectangle($barBrush, [single]($cx - $w / 2.0), [single]$barY, [single]$w, [single]$barH)
     $barBrush.Dispose()
 
-    $file = Join-Path $Part ("frame_{0:d3}.png" -f $i)
     $bmp.Save($file, [System.Drawing.Imaging.ImageFormat]::Png)
+}
+
+Write-Host (("кадров: {0} появление + {1} пульсация ({2}x{3}, {4} fps)") -f $FadeFrames, $PulseFrames, $Width, $Height, $Fps)
+
+# part0 — появление, играет один раз
+for ($i = 0; $i -lt $FadeFrames; $i++) {
+    $t = ($i + 1) / [double]$FadeFrames
+    $alpha = [int][Math]::Round(255 * [Math]::Pow($t, 1.6))
+    Save-Frame $alpha (Join-Path $Part0 ("frame_{0:d3}.png" -f $i))
+}
+
+# part1 — пульсация, крутится до конца загрузки; первый и последний кадр
+# совпадают по яркости, поэтому стык незаметен
+for ($i = 0; $i -lt $PulseFrames; $i++) {
+    $phase = 2.0 * [Math]::PI * $i / $PulseFrames
+    $alpha = [int][Math]::Round($PulseMin + (255 - $PulseMin) * (0.5 + 0.5 * [Math]::Cos($phase)))
+    Save-Frame $alpha (Join-Path $Part1 ("frame_{0:d3}.png" -f $i))
 }
 
 $g.Dispose()
@@ -93,29 +107,36 @@ $bmp.Dispose()
 $font.Dispose()
 $family.Dispose()
 
-# desc.txt: размер экрана, fps, одна часть (проиграть один раз и держать кадр)
+# desc.txt: размер экрана, fps, части. part0 — раз, part1 — бесконечно.
 $desc = Join-Path $Tmp 'desc.txt'
-$descText = "$Width $Height $Fps`np 1 0 part0`n"
+$descText = "$Width $Height $Fps`np 1 0 part0`np 0 0 part1`n"
 [System.IO.File]::WriteAllText($desc, $descText, (New-Object System.Text.UTF8Encoding($false)))
 
-# zip без сжатия: так требует загрузчик Android
-Add-Type -AssemblyName System.IO.Compression
-Add-Type -AssemblyName System.IO.Compression.FileSystem
+# ZIP_STORED: Android bootanimation не читает deflate-кадры.
+$pack = Join-Path $Tmp 'pack.py'
+$packPy = @"
+import os
+import sys
+import zipfile
+
+src, out = sys.argv[1], sys.argv[2]
+with zipfile.ZipFile(out, 'w', zipfile.ZIP_STORED) as z:
+    z.write(os.path.join(src, 'desc.txt'), 'desc.txt')
+    for part in ('part0', 'part1'):
+        d = os.path.join(src, part)
+        # bootanimation ищет в zip сам каталог partN/, а не только файлы
+        info = zipfile.ZipInfo(part + '/')
+        info.external_attr = 0o40755 << 16
+        z.writestr(info, b'')
+        for name in sorted(os.listdir(d)):
+            z.write(os.path.join(d, name), part + '/' + name)
+"@
+[System.IO.File]::WriteAllText($pack, $packPy, (New-Object System.Text.UTF8Encoding($false)))
+
 if (Test-Path $Out) { Remove-Item $Out -Force }
-$zip = [System.IO.Compression.ZipFile]::Open($Out, [System.IO.Compression.ZipArchiveMode]::Create)
-function Add-Stored($zip, $path, $entryName) {
-    $e = $zip.CreateEntry($entryName, [System.IO.Compression.CompressionLevel]::NoCompression)
-    $s = $e.Open()
-    $bytes = [System.IO.File]::ReadAllBytes($path)
-    $s.Write($bytes, 0, $bytes.Length)
-    $s.Dispose()
-}
-Add-Stored $zip $desc 'desc.txt'
-foreach ($f in (Get-ChildItem $Part -Filter *.png | Sort-Object Name)) {
-    Add-Stored $zip $f.FullName ('part0/' + $f.Name)
-}
-$zip.Dispose()
+& python $pack $Tmp $Out
+if ($LASTEXITCODE -ne 0) { throw 'python pack failed' }
 
 Remove-Item $Tmp -Recurse -Force
 
-Write-Host ("готово: {0} ({1:N0} байт)" -f $Out, (Get-Item $Out).Length)
+Write-Host (("готово: {0} ({1:N0} байт)") -f $Out, (Get-Item $Out).Length)
