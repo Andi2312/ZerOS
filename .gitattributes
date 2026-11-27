@@ -5,5 +5,6 @@
 # Бинарные артефакты и ресурсы
 *.ogg binary
 *.png binary
+*.mp4 binary
 *.zip binary
 *.apk binary

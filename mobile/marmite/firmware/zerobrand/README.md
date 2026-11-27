@@ -36,23 +36,30 @@ LineageParts. Файлы `build.prop` не меняются, `/system` и `/vend
 ### Загрузочная анимация
 
 `bootanimation.zip` упаковывается в `system/media/bootanimation.zip`.
-Собирается генератором:
+Анимация — клип `bootanimation/zeros.mp4` (720×1280, 30 fps, 4,5 с,
+135 кадров): чёрный фон, wordmark «ZeroS» и медленно плывущие белые линии.
+Собирается без Python — ffmpeg вытаскивает кадры, 7-Zip пакует:
 
 ```powershell
-powershell -File bootanimation\make_bootanimation.ps1
+powershell -File bootanimation\make_bootanimation_from_video.ps1
 ```
 
-Чёрный фон, надпись «ZerOS I» цветом `#F2A6A0` с подчёркиванием, 720×1280,
-30 fps. Две части: `part0` — появление (24 кадра, играет один раз), `part1` —
-мягкая пульсация (90 кадров, крутится, пока идёт загрузка). Другой экран —
-параметрами `-Width 1080 -Height 2160`. Сам zip — артефакт сборки, в git не
-хранится.
+Клип не является бесшовной петлёй, поэтому скрипт делает **пинг-понг**: 135
+кадров вперёд + 133 назад = 268 кадров в одной части `part0`, которая крутится
+без рывков (`p 0 0 part0`). С флагом `-NoPingPong` — просто цикл как есть,
+с видимым стыком. Кадры вписаны ровно в экран (`scale`+`pad`), звук из видео
+отбрасывается: bootanimation его не играет.
+
+Прежний вариант со надписью «ZerOS I» рисуется генератором
+`bootanimation\make_bootanimation.ps1` (появление + пульсация) — он остался
+как запасной. Сам zip — артефакт сборки, в git не хранится; в git лежит
+исходное видео.
 
 Важно: кадры в `bootanimation.zip` должны быть **stored** (без сжатия) и в
 архиве нужны записи каталогов `part0/`, `part1/` — иначе Android показывает
-чёрный экран. Поэтому zip собирается через `python` (`zipfile.ZIP_STORED`):
-PowerShell 5.1 (.NET Framework) с `CompressionLevel.NoCompression` всё равно
-жмёт кадры deflate.
+чёрный экран. Поэтому `.NET`-сжатие не годится (`CompressionLevel.NoCompression`
+всё равно жмёт deflate), а 7-Zip с ключом `-mx0` даёт ровно method 0;
+`make_bootanimation_from_video.ps1` после сборки это проверяет.
 
 ### Логотип в LineageParts
 
@@ -140,7 +147,7 @@ marmite гасит оверлеи и соседних категорий (про
 ## Сборка и установка
 
 ```powershell
-powershell -File bootanimation\make_bootanimation.ps1
+powershell -File bootanimation\make_bootanimation_from_video.ps1
 powershell -File logo\build_overlay.ps1
 python make_zip.py
 adb push dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip

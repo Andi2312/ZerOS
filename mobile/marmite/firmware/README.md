@@ -424,12 +424,13 @@ sync
 
 `zerobrand/` — Magisk-модуль: `system.prop` (при загрузке `resetprop` меняет
 `ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
-на ZerOS-значения), загрузочная анимация, обои и тема по умолчанию, логотип
+на ZerOS-значения), загрузочная анимация (клип `bootanimation/zeros.mp4`:
+«ZeroS» и плывущие линии, пинг-понг-цикл), обои и тема по умолчанию, логотип
 ZerOS в LineageParts. Звуки заводские. Системные файлы не перезаписываются,
 модуль обратим.
 
 ```powershell
-powershell -File zerobrand\bootanimation\make_bootanimation.ps1   # собрать bootanimation.zip
+powershell -File zerobrand\bootanimation\make_bootanimation_from_video.ps1   # bootanimation.zip из видео (ffmpeg + 7z)
 powershell -File zerobrand\logo\build_overlay.ps1                 # собрать RRO-оверлей логотипа
 python zerobrand\make_zip.py
 adb push zerobrand\dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
@@ -438,11 +439,12 @@ adb reboot
 ```
 
 
-Загрузочная анимация — чёрный фон, надпись «ZerOS I» акцентным `#F2A6A0`
-с подчёркиванием, 720×1280, 30 fps: появление один раз, потом мягкая
-пульсация до конца загрузки. Генератор —
-`zerobrand\bootanimation\make_bootanimation.ps1` (размер экрана задаётся
-параметрами `-Width`/`-Height`).
+Загрузочная анимация — клип `zerobrand\bootanimation\zeros.mp4` (720×1280,
+30 fps, 4,5 с): чёрный фон, wordmark «ZeroS» и медленно плывущие белые линии.
+Скрипт `make_bootanimation_from_video.ps1` вытаскивает кадры ffmpeg'ом и
+упаковывает 7-Zip'ом (`-mx0`, stored); клип не бесшовный, поэтому кадры идут
+вперёд и назад — 268 кадров в цикле `part0` без рывков. Прежний вариант с
+надписью «ZerOS I» рисует `make_bootanimation.ps1` — оставлен запасным.
 
 Обои — «Орбита» (`zerobrand\wallpaper\wallpaper.jpg`, 720×1280): тёмный фон,
 концентрические кольца и точка акцентным `#F2A6A0`, генератор —
