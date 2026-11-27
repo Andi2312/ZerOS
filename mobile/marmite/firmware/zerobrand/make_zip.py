@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 """Собрать Magisk-модуль zerobrand: свойства, загрузочная анимация,
-обои по умолчанию и логотип ZerOS в LineageParts.
+обои по умолчанию, тема по умолчанию и логотип ZerOS в LineageParts.
 
 Модуль подменяет свойства через resetprop и накладывает файлы оверлеем
 Magisk: /system/media/bootanimation.zip и
 /system/product/overlay/ZerOSLogo.apk. Обои (wallpaper/wallpaper.jpg)
-post-fs-data.sh один раз кладёт в /data/system/users/0/wallpaper.
-Звуки не трогаются - они заводские.
+post-fs-data.sh один раз кладёт в /data/system/users/0/wallpaper, тему
+(акцент pink, форма roundedrect, шрифт Rubik) service.sh один раз
+выставляет после первой загрузки. Звуки не трогаются - они заводские.
 
 Перед сборкой анимации и логотипа:
     powershell -File bootanimation\\make_bootanimation.ps1
@@ -42,6 +43,7 @@ def main():
         z.write(os.path.join(ROOT, 'module.prop'), 'module.prop')
         z.write(os.path.join(ROOT, 'system.prop'), 'system.prop')
         z.write(os.path.join(ROOT, 'post-fs-data.sh'), 'post-fs-data.sh')
+        z.write(os.path.join(ROOT, 'service.sh'), 'service.sh')
         z.write(os.path.join(ROOT, 'uninstall.sh'), 'uninstall.sh')
         z.write(BOOT, 'system/media/bootanimation.zip')
         z.write(LOGO, 'system/product/overlay/ZerOSLogo.apk')

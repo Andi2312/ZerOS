@@ -1,7 +1,7 @@
 # zerobrand — брендинг ZerOS
 
 Magisk-модуль брендинга: подменяет LineageOS-строки в свойствах системы,
-ставит свою загрузочную анимацию, обои по умолчанию и логотип ZerOS в
+ставит свою загрузочную анимацию, обои и тему по умолчанию и логотип ZerOS в
 LineageParts. Файлы `build.prop` не меняются, `/system` и `/vendor` не
 перезаписываются — Magisk накладывает их оверлеем. Выключили модуль и
 перезагрузились — вернулся LineageOS.
@@ -108,6 +108,35 @@ Python-пакетов. Чтобы поставить другой вариант
 `/data/adb/zerobrand/wallpaper.applied` (бэкап прежних обоев при этом
 сохранится) и перезагрузиться — скрипт отработает заново при загрузке.
 
+### Тема по умолчанию
+
+Встроенную тему по умолчанию в ROM модуль переписать не может, поэтому тема
+выставляется один раз — при первой загрузке с модулем, — теми же действиями,
+что делает «Стили»: в каждой категории остаётся ровно один оверлей, выбор
+пишется в `settings secure theme_customization_overlay_packages`.
+
+| Категория | Оверлей |
+|---|---|
+| акцент | `org.lineageos.overlay.accent.pink` |
+| шрифт | `org.lineageos.overlay.font.rubik` |
+| форма иконок | `com.android.theme.icon.roundedrect` |
+
+Делает это `service.sh` (в `post-fs-data.sh` нельзя: до подъёма
+`system_server` нет ни `settings`, ни `cmd overlay`). Скрипт ждёт
+`sys.boot_completed`, гасит чужие акценты/шрифты/формы, включает свои и
+проверяет результат чтением обратно; только после этого ставит маркер
+`/data/adb/zerobrand/theme.applied`. Дальше он молчит — сменили тему в
+«Стилях», она останется.
+
+`cmd overlay enable-exclusive` здесь не используется: без `--category` он на
+marmite гасит оверлеи и соседних категорий (проверено), поэтому чужие оверлеи
+снимаются по именам, а свои включаются обычным `enable`.
+
+Прежний выбор темы сохраняется в `/data/adb/zerobrand/theme.orig.json`, и
+`uninstall.sh` возвращает его — но только если тему с тех пор не меняли
+(сравнивает текущее значение с тем, что записал модуль, без
+`_applied_timestamp`).
+
 ## Сборка и установка
 
 ```powershell
@@ -129,6 +158,7 @@ adb shell getprop ro.build.display.id
 adb shell getprop ro.lineage.version
 adb shell cmd overlay list | findstr zeroc       # [x] org.zeroc.logo
 adb shell settings get system notification_sound # заводской Argon
+adb shell settings get secure theme_customization_overlay_packages  # pink + rubik + roundedrect
 adb shell su -c "ls -l /data/system/users/0/wallpaper"   # 130977 байт
 adb shell logcat -d | findstr ImageWallpaperRenderer     # surface size=Rect(0, 0 - 720, 1280)
 ```
@@ -141,8 +171,8 @@ adb reboot
 ```
 
 Или выключить модуль в приложении Magisk. Вместе с модулем уходят свойства,
-анимация и логотип; `uninstall.sh` возвращает прежние обои, если с тех пор их
-не меняли. Звуки остаются заводскими.
+анимация и логотип; `uninstall.sh` возвращает прежние обои и тему, если с тех
+пор их не меняли. Звуки остаются заводскими.
 
 ## Оговорки
 
@@ -167,3 +197,8 @@ adb reboot
 - `wallpaper_info.xml` — служебный файл WallpaperManagerService: при загрузке
   система может переписать его (ширину приводит к «желаемой» 1440). На
   отрисовку это не влияет: размер полотна берётся из самого `wallpaper.jpg`.
+- Тема по умолчанию выставляется один раз, поэтому «сброс к заводской» в
+  «Стилях» вернёт стоковую тему, а не ZerOS: чтобы вернуть нашу, надо удалить
+  маркер `/data/adb/zerobrand/theme.applied` и перезагрузиться. Оверлеи темы —
+  системные (`/product/overlay`), модуль их только включает, сами APK не
+  подменяются.

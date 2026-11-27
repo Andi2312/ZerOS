@@ -26,7 +26,7 @@
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
   `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`), ставит свою
-  загрузочную анимацию, обои по умолчанию и логотип ZerOS в LineageParts.
+  загрузочную анимацию, обои и тему по умолчанию, логотип ZerOS в LineageParts.
   Файлы `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
@@ -424,9 +424,9 @@ sync
 
 `zerobrand/` — Magisk-модуль: `system.prop` (при загрузке `resetprop` меняет
 `ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
-на ZerOS-значения), загрузочная анимация, обои по умолчанию и логотип ZerOS в
-LineageParts. Звуки заводские. Системные файлы не перезаписываются, модуль
-обратим.
+на ZerOS-значения), загрузочная анимация, обои и тема по умолчанию, логотип
+ZerOS в LineageParts. Звуки заводские. Системные файлы не перезаписываются,
+модуль обратим.
 
 ```powershell
 powershell -File zerobrand\bootanimation\make_bootanimation.ps1   # собрать bootanimation.zip
@@ -451,6 +451,14 @@ adb reboot
 `/data/system/users/0/wallpaper` при установке модуля, дальше выбор
 пользователя не перебивает; при удалении модуля `uninstall.sh` возвращает
 прежние обои, если их не меняли.
+
+Тема по умолчанию — акцент «pink», шрифт Rubik, форма иконок roundedrect.
+`service.sh` выставляет её один раз после первой загрузки с модулем (в
+`post-fs-data.sh` нельзя: до `system_server` нет `settings` и `cmd overlay`):
+включает эти оверлеи, гасит чужие акценты/шрифты/формы и пишет выбор в
+`theme_customization_overlay_packages`; маркер —
+`/data/adb/zerobrand/theme.applied`. Встроенную тему ROM модуль не меняет.
+Подробности и откат — в `zerobrand\README.md`.
 
 Звуки — заводские: свои `.ogg` в модуль больше не входят, звук отключения
 зарядки тоже убран (в LineageOS 17.1 его нет, а своё приложение снималось
