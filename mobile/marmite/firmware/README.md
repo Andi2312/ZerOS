@@ -26,8 +26,7 @@
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
   `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`), ставит свою
-  загрузочную анимацию, звуки интерфейса, уведомления, рингтон и будильник,
-  логотип ZerOS в LineageParts и помощник для звука отключения зарядки. Файлы
+  загрузочную анимацию и логотип ZerOS в LineageParts. Файлы
   `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
@@ -425,14 +424,12 @@ sync
 
 `zerobrand/` — Magisk-модуль: `system.prop` (при загрузке `resetprop` меняет
 `ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
-на ZerOS-значения), загрузочная анимация, звуки интерфейса и уведомлений,
-логотип ZerOS в LineageParts и приложение для звука отключения зарядки.
-Системные файлы не перезаписываются, модуль обратим.
+на ZerOS-значения), загрузочная анимация и логотип ZerOS в LineageParts.
+Звуки заводские. Системные файлы не перезаписываются, модуль обратим.
 
 ```powershell
 powershell -File zerobrand\bootanimation\make_bootanimation.ps1   # собрать bootanimation.zip
 powershell -File zerobrand\logo\build_overlay.ps1                 # собрать RRO-оверлей логотипа
-powershell -File zerobrand\charge\build_charge.ps1                # собрать ZerOSCharge.apk
 python zerobrand\make_zip.py
 adb push zerobrand\dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
@@ -446,14 +443,9 @@ adb reboot
 `zerobrand\bootanimation\make_bootanimation.ps1` (размер экрана задаётся
 параметрами `-Width`/`-Height`).
 
-Звуки — `zerobrand\sounds\ui\*.ogg` → `/system/product/media/audio/ui/`:
-тики, клавиши, камера, видео, блокировка/разблокировка, зарядка (старт и
-стоп), низкий заряд, док. Короткие и мягкие, OGG Vorbis; генератор —
-`zerobrand\sounds\make_sounds.py`. Свои уведомление, рингтон и будильник —
-`Glint`, `First Light` и `Sunrise` в `sounds\{notifications,ringtones,alarms}`;
-`zerobrand\service.sh` ставит их по умолчанию, если пользователь не выбрал
-свои. Звук отключения зарядки играет `zerobrand\charge\ZerOSCharge.apk`
-(receiver на `ACTION_POWER_DISCONNECTED`).
+Звуки — заводские: свои `.ogg` в модуль больше не входят, звук отключения
+зарядки тоже убран (в LineageOS 17.1 его нет, а своё приложение снималось
+вместе с ним).
 
 Логотип — статический RRO-оверлей `zerobrand\logo\ZerOSLogo.apk` в
 `/system/product/overlay`: подменяет `drawable/logo_lineage` в LineageParts,
