@@ -1,8 +1,9 @@
 # zerosettings — «Версия ZerOS I» в настройках
 
-Magisk-модуль подменяет системные настройки LineageOS
-(`/system/product/priv-app/Settings/Settings.apk`) на пересобранные с правкой
-экрана **«Версия прошивки»** в «О телефоне»:
+Пересобранные системные настройки LineageOS: APK заменяет
+`/system/product/priv-app/Settings/Settings.apk` и с версии 1.0 лежит прямо в
+системном разделе (без Magisk). Правка — экран **«Версия прошивки»** в
+«О телефоне»:
 
 - строка **«Версия API»** (`lineage_api_version`, Lineage SDK) убрана;
 - строка **«Версия LineageOS»** переименована в **«Версия ZerOS I»** — ключ и
@@ -59,23 +60,31 @@ C8:A2:E9:BC:CF:59:7C:2F:B6:DC:66:BE:E2:93:FC:13:F2:FC:47:EC:77:BC:6B:2B:0D:52:C1
 3. декодирует APK, правит `res/xml/firmware_version.xml` и строки
    (`patch_res.py`);
 4. собирает, выравнивает `zipalign -p 4`, подписывает платформенным ключом;
-5. кладёт `dist\Settings.apk` и собирает модуль `dist\zerosettings-1.0.zip`.
+5. кладёт `dist\Settings.apk` и, для старого способа, собирает модуль
+   `dist\zerosettings-1.0.zip`.
 
 Правка ресурсов вынесена в `patch_res.py`: скрипт идемпотентен и падает, если
 разметка изменилась (например, после обновления прошивки).
 
 ## Установка
 
+APK попадает в `/system/product/priv-app/Settings/Settings.apk` в составе
+общего патча брендинга (`..\make_patch_zip.ps1`) или `system.img` — отдельно
+ставить ничего не нужно. Вручную:
+
 ```powershell
-adb push dist\zerosettings-1.0.zip /data/local/tmp/zerosettings.zip
-adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
-adb shell su -c "rm -rf /data/system/package_cache"
+adb push dist\Settings.apk /data/local/tmp/Settings.apk
+adb shell su -c "mount -o rw /dev/block/bootdevice/by-name/system /mnt/sys"
+adb shell su -c "cp /data/local/tmp/Settings.apk /mnt/sys/system/product/priv-app/Settings/Settings.apk"
+adb shell su -c "chmod 644 /mnt/sys/system/product/priv-app/Settings/Settings.apk"
+adb shell su -c "chcon u:object_r:system_file:s0 /mnt/sys/system/product/priv-app/Settings/Settings.apk"
 adb reboot
 ```
 
-`/data/system/package_cache` нужно чистить: PackageManager кэширует разобранный
-системный APK, и без очистки после подмены файла продолжает показывать старые
-ресурсы до сброса данных.
+`/data/system/package_cache` при замене реального файла не обязателен:
+PackageManager сверяет mtime/размер и пересобирает запись при загрузке.
+Если всё же показываются старые строки — `rm -rf /data/system/package_cache`
+и перезагрузка.
 
 Проверка:
 
@@ -96,17 +105,14 @@ ZerOS I → <`ro.lineage.version`>», строки «Версия API» нет, 
 
 ## Откат
 
-```powershell
-adb shell su -c "magisk --remove-module zerosettings"
-adb shell su -c "rm -rf /data/system/package_cache"
-adb reboot
-```
-
-Или выключить модуль в Magisk и перезагрузиться.
+Вернуть прежний APK из `/sdcard/zerobak-patch-<дата>/Settings.apk` тем же
+способом (или перепрошить LineageOS 17.1 — она вернёт system). Если
+использовался старый Magisk-модуль: удалить `/data/adb/modules/zerosettings`,
+`rm -rf /data/system/package_cache`, перезагрузка.
 
 ## Оговорки
 
-- Модуль подменяет только APK. После обновления прошивки (или OTA) настройки
+- Заменяется только APK. После обновления прошивки (или OTA) настройки
   обновятся вместе с системой, и правку нужно будет собрать заново — версия
   LineageOS в заголовке вернётся.
 - Пересобранный APK подписан тем же ключом, поэтому обновление системного

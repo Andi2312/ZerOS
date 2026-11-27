@@ -23,11 +23,12 @@
   `/system/product/priv-app/TrebuchetQuickStep/`. Эксперименты с лаунчерами
   (HomeWatch, ZerHome) сняты с телефона и удалены из репозитория — исходники
   остались в истории git.
-- Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
-  LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
-  `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`), ставит свою
-  загрузочную анимацию, тему по умолчанию, логотип ZerOS в LineageParts.
-  Файлы `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I 1.0**.
+- Брендинг **записан прямо в `/system`**, без Magisk-модулей: в конец
+  `/system/build.prop` добавлен блок свойств ZerOS (`getprop
+  ro.build.display.id` → `Zeros_marmite 1.0 ...`, `ro.lineage.version` →
+  `1.0`), заменены загрузочная анимация, `Settings.apk` и `Updater.apk`,
+  добавлены статические RRO темы и логотипа. Оригиналы — в `/data/zerobak/`.
+  Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
   и в репозиторий не входят: готовая прошивка публикуется в **Releases**.
@@ -422,23 +423,49 @@ sync
 
 ## Брендинг ZerOS
 
-`zerobrand/` — Magisk-модуль: `system.prop` (при загрузке `resetprop` меняет
-`ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
-на ZerOS-значения), загрузочная анимация (клип `bootanimation/zeros.mp4`:
-«ZeroS» и плывущие линии, пинг-понг-цикл), тема по умолчанию, логотип
-ZerOS в LineageParts. Звуки заводские. Системные файлы не перезаписываются,
-модуль обратим.
+С версии 1.0 брендинг **записан файлами в реальный `/system`** — без Magisk.
+Папки `zerobrand/`, `zerosettings/`, `zeroupdater/` остались сборщиками
+артефактов; модули из них больше не устанавливаются.
+
+| Файл в `/system` | Что |
+|---|---|
+| `build.prop` | блок свойств ZerOS дописан в конец (последнее значение выигрывает), оригинал в `/data/zerobak/` |
+| `media/bootanimation.zip` | анимация «ZeroS» |
+| `product/overlay/ZerOS{Accent,Font,Shape}.apk` | статические RRO: pink, Rubik, roundedrect |
+| `product/overlay/ZerOSLogo.apk` | статический RRO: логотип в LineageParts |
+| `product/priv-app/Settings/Settings.apk` | «Версия ZerOS I» |
+| `priv-app/Updater/Updater.apk` | «ZerOS 1.0» в обновляторе |
+
+`/vendor` — squashfs (`ro`), поэтому `ro.product.vendor.name` и
+`ro.product.odm.name` остались `lineage_marmite`; строки в `build.prop` на
+них не влияют. Всё остальное применяется.
+
+Сборка артефактов:
 
 ```powershell
 powershell -File zerobrand\bootanimation\make_bootanimation_from_video.ps1   # bootanimation.zip из видео (ffmpeg + 7z)
 powershell -File zerobrand\theme\build_theme.ps1                  # три статических RRO темы
-powershell -File zerobrand\logo\build_overlay.ps1                 # собрать RRO-оверлей логотипа
-python zerobrand\make_zip.py
-adb push zerobrand\dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
-adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
-adb reboot
+powershell -File zerobrand\logo\build_overlay.ps1                 # RRO-оверлей логотипа
+.\zerosettings\build.ps1                                          # Settings.apk
+.\zeroupdater\build.ps1                                           # Updater.apk
 ```
 
+Установка — два взаимозаменяемых способа (подробности в
+`zerobrand/README.md`):
+
+```powershell
+# 1) патч-zip поверх уже стоящей LineageOS 17.1 (~40 МБ), ставится в TWRP
+.\make_patch_zip.ps1 -BuildProp C:\work\sys\build.prop.new
+adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
+
+# 2) полный образ system (449 МБ в 7z, 3,5 ГБ внутри) — fastboot flash system
+7z x dist\ZerOS-I-1.0-marmite-system.img.7z
+fastboot flash system system.img
+```
+
+`boot`, `vendor` и `recovery` в релиз не входят и не прошиваются. Образ снят
+с раздела при смонтированном ro `/system`, `e2fsck -fn` чистый, md5 файлов
+внутри сверены с исходниками.
 
 Загрузочная анимация — клип `zerobrand\bootanimation\zeros.mp4` (720×1280,
 30 fps, 4,5 с): чёрный фон, wordmark «ZeroS» и медленно плывущие белые линии.
@@ -447,7 +474,7 @@ adb reboot
 вперёд и назад — 268 кадров в цикле `part0` без рывков. Прежний вариант с
 надписью «ZerOS I» рисует `make_bootanimation.ps1` — оставлен запасным.
 
-Обои — родные Lineage, модуль их не трогает: свои с телефона убраны,
+Обои — родные Lineage, установка их не трогает: свои с телефона убраны,
 прежние возвращены из бэкапа (картинка и `wallpaper_info.xml`). Звуки тоже
 заводские.
 
@@ -455,62 +482,50 @@ adb reboot
 вшита тремя статическими RRO-оверлеями (`org.zeroc.theme.accent`,
 `.font`, `.shape`): они лежат в `/system/product/overlay`, включаются сами
 при каждой загрузке и из «Стилей» не выключаются. Исходники —
-`zerobrand\theme\`, сборка `powershell -File zerobrand\theme\build_theme.ps1`.
-Подробности и откат — в `zerobrand\README.md`.
+`zerobrand\theme\`, сборка `zerobrand\theme\build_theme.ps1`.
 
-Звуки — заводские: свои `.ogg` в модуль больше не входят, звук отключения
-зарядки тоже убран (в LineageOS 17.1 его нет, а своё приложение снималось
-вместе с ним).
+Звуки — заводские: своих `.ogg` нет, звук отключения зарядки тоже убран
+(в LineageOS 17.1 его нет).
 
 Логотип — статический RRO-оверлей `zerobrand\logo\ZerOSLogo.apk` в
 `/system/product/overlay`: подменяет `drawable/logo_lineage` в LineageParts,
 поэтому в пасхалке («О телефоне» → тап по «Версия ZerOS I») рисуется wordmark
 «ZerOS I» вместо логотипа LineageOS. Оверлей подписан платформенным ключом;
-ставить его отдельным APK нельзя — только как предустановленный (это делает
-модуль).
+поставить его отдельным APK нельзя — только предустановленным в системе.
 
-Откат: выключить модуль в Magisk (или `magisk --remove-module zerobrand`) и
-перезагрузиться. Таблица значений, детали сборки и оговорки (Updater,
-Lineage SDK) — в `zerobrand/README.md`.
+Откат: перепрошить LineageOS 17.1 (вернёт system) или вернуть файлы из
+`/sdcard/zerobak-patch-<дата>/`. Таблица значений, детали сборки и оговорки
+(Updater, Lineage SDK) — в `zerobrand/README.md`.
 
 ## Настройки: «Версия ZerOS I»
 
-`zerosettings/` — Magisk-модуль, подменяющий системный
-`Settings.apk` пересобранным: в «О телефоне» → «Версия прошивки» убрана строка
+Пересобранный `Settings.apk` лежит прямо в
+`/system/product/priv-app/Settings/Settings.apk`: в «О телефоне» убрана строка
 «Версия API», а «Версия LineageOS» переименована в «Версия ZerOS I». Значение
 по-прежнему берётся из `ro.lineage.version` (сейчас `1.0`).
 
 ```powershell
-.\zerosettings\build.ps1
-adb push zerosettings\dist\zerosettings-1.0.zip /data/local/tmp/zerosettings.zip
-adb shell su -c "magisk --install-module /data/local/tmp/zerosettings.zip"
-adb shell su -c "rm -rf /data/system/package_cache"
-adb reboot
+.\zerosettings\build.ps1        # → zerosettings\dist\Settings.apk
 ```
 
 APK подписывается платформенным ключом AOSP (`android-10.0.0_r47`), иначе
-настройки теряют signature-разрешения. Подробности — в
+настройки теряют signature-разрешения. В патч-zip и образ попадает готовый
+APK; отдельная установка модулем больше не нужна. Подробности — в
 `zerosettings/README.md`.
 
 ## Обновлятор: «ZerOS 1.0»
 
-`zeroupdater/` — Magisk-модуль, подменяющий `Updater.apk`: в шапке обновлятора
-`ZerOS` с версией `1.0` (номер из `ro.lineage.build.version`) вместо
-`LineageOS`, так же в списке сборок. Адреса сервера,
-ссылки на wiki и пути загрузок не тронуты. Подпись — AOSP testkey, как у
-штатного обновлятора.
+`Updater.apk` в `/system/priv-app/Updater/`: в шапке обновлятора `ZerOS` с
+версией `1.0` (номер из `ro.lineage.build.version`) вместо `LineageOS`, так
+же в списке сборок. Адреса сервера, ссылки на wiki и пути загрузок не
+тронуты. Подпись — AOSP testkey, как у штатного обновлятора.
 
 ```powershell
-.\zeroupdater\build.ps1
-adb push zeroupdater\dist\zeroupdater-1.0.zip /data/local/tmp/zeroupdater.zip
-adb shell su -c "magisk --install-module /data/local/tmp/zeroupdater.zip"
-adb shell su -c "rm -rf /data/system/package_cache"
-adb reboot
+.\zeroupdater\build.ps1         # → zeroupdater\dist\Updater.apk
 ```
 
-Число в шапке берётся из `ro.lineage.build.version` (`zerobrand`), поэтому
-менять версию можно без пересборки APK. Подробности — в
-`zeroupdater/README.md`.
+Число в шапке берётся из `ro.lineage.build.version`, поэтому менять версию
+можно без пересборки APK. Подробности — в `zeroupdater/README.md`.
 
 ## Важно
 

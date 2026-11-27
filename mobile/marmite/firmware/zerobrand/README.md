@@ -1,14 +1,22 @@
 # zerobrand — брендинг ZerOS
 
-Magisk-модуль брендинга: подменяет LineageOS-строки в свойствах системы,
-ставит свою загрузочную анимацию, тему по умолчанию и логотип ZerOS в
-LineageParts. Файлы `build.prop` не меняются, `/system` и `/vendor` не
-перезаписываются — Magisk накладывает их оверлеем. Выключили модуль и
-перезагрузились — вернулся LineageOS.
+Брендинг ZerOS: строки LineageOS в свойствах системы, своя загрузочная
+анимация, тема по умолчанию и логотип ZerOS в LineageParts.
 
-## Что подменяется
+С версии 1.0 брендинг **записан прямо в `/system`** — файлами, без Magisk.
+Модуль `zerobrand` больше не устанавливается; папка остаётся генератором
+файлов и заготовкой для будущей упаковки прошивки (см. «Установка прямо в
+`/system`»). `/vendor` — squashfs только для чтения, поэтому vendor-строки
+не меняются (см. оговорки).
+
+## Что меняется
 
 ### Свойства системы (`system.prop`)
+
+`system.prop` — источник блока. При установке прямо в `/system` эти строки
+дописаны в конец `/system/build.prop` (одноимённые значения ниже перекрывают
+верхние), исходный файл сохранён в `/data/zerobak/build.prop` и в
+`C:\work\sys\build.prop.orig`.
 
 | Свойство | Значение |
 |---|---|
@@ -26,6 +34,11 @@ LineageParts. Файлы `build.prop` не меняются, `/system` и `/vend
 | `ro.lineage.build.version.plat.sdk` | `1` |
 | `ro.lineage.build.version.plat.rev` | `0` |
 | `ro.lineagelegal.url` | `no` |
+
+Строки `ro.product.vendor.name` и `ro.product.odm.name` в списке есть, но на
+marmite не действуют: `/vendor` — squashfs только для чтения, а эти свойства
+читаются из vendor/odm `build.prop`. В системе они остаются `lineage_marmite`
+(проверено `getprop`); остальные значения применяются.
 
 Исходные значения (для возврата): `lineage_marmite`, `17.1-20210703-UNOFFICIAL-marmite`,
 `UNOFFICIAL`, `17.1`, sdk `9`.
@@ -87,7 +100,7 @@ powershell -File logo\build_overlay.ps1
 
 ### Обои и звуки
 
-Обои модуль не трогает — остаются родные Lineage. Звуки тоже заводские.
+Обои установка не трогает — остаются родные Lineage. Звуки тоже заводские.
 Свои обои из ZerOS на телефоне убраны, прежние возвращены из бэкапа
 (картинка и `wallpaper_info.xml`, id сохранён).
 
@@ -111,7 +124,7 @@ powershell -File logo\build_overlay.ps1
 системные семейства `rubik`/`rubik-medium` из `/system/etc/fonts.xml`.
 
 Оверлеи помечены `android:isStatic="true"`, лежат в
-`/system/product/overlay` (туда их кладёт модуль) и имеют `priority="0"`:
+`/system/product/overlay` и имеют `priority="0"`:
 OverlayManager включает их сам при каждой загрузке, а выбранные в «Стилях»
 акцент/шрифт/форма (priority 1) по-прежнему главнее — если выбрать другой
 акцент, он сработает. Пока ничего не выбрано, действует тема ZerOS.
@@ -137,46 +150,101 @@ powershell -File theme\build_theme.ps1
 что «Стили» показывают тему по умолчанию — это и есть ZerOS. Любой выбор в
 «Стилях» по-прежнему работает поверх неё.
 
-## Сборка и установка
+## Сборка
 
 ```powershell
 powershell -File bootanimation\make_bootanimation_from_video.ps1
 powershell -File theme\build_theme.ps1
 powershell -File logo\build_overlay.ps1
-python make_zip.py
-adb push dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
-adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
-adb reboot
 ```
 
-Обои и звуки модуль не трогает — они родные Lineage.
+`make_zip.py` по-прежнему собирает Magisk-модуль `dist\zerobrand-1.0.zip`:
+он остался запасным способом установки и генератором файлов, но в 1.0 на
+телефон не ставится.
 
-Проверка после загрузки:
+## Установка прямо в `/system`
+
+Брендинг записан файлами в реальный раздел system — без Magisk и без
+подмен. `/system` перемонтируется rw (ext4, `mmcblk0p24`), файлы кладутся по
+местам, выставляются владелец, права и SELinux-контексты:
+
+| Файл в `/system` | Что |
+|---|---|
+| `build.prop` | блок свойств ZerOS дописан в конец (исходные строки выше сохранены) |
+| `media/bootanimation.zip` | анимация «ZeroS» |
+| `product/overlay/ZerOSAccent.apk` | статический RRO: акцент pink |
+| `product/overlay/ZerOSFont.apk` | статический RRO: Rubik |
+| `product/overlay/ZerOSShape.apk` | статический RRO: скруглённые иконки |
+| `product/overlay/ZerOSLogo.apk` | статический RRO: логотип в LineageParts |
+| `product/priv-app/Settings/Settings.apk` | «Версия ZerOS I» |
+| `priv-app/Updater/Updater.apk` | «ZerOS 1.0» в обновляторе |
+
+Владелец `root:root`; `build.prop` — `600`, остальное — `644`. Контексты:
+оверлеи — `u:object_r:vendor_overlay_file:s0`, остальные файлы —
+`u:object_r:system_file:s0` (именно так размечены штатные файлы этих
+каталогов).
+
+Два способа установки, оба дают одно и то же состояние:
+
+**1. Патч-zip для TWRP** (поверх уже стоящей LineageOS 17.1):
 
 ```powershell
-adb shell getprop ro.build.display.id
-adb shell getprop ro.lineage.version
-adb shell cmd overlay list | findstr zeroc       # [x] org.zeroc.logo (тема статическая и в списке не видна)
-adb shell cmd overlay dump org.zeroc.theme.accent # mState: STATE_ENABLED_STATIC
+.\make_patch_zip.ps1 -BuildProp C:\work\sys\build.prop.new
+# dist\ZerOS-I-1.0-marmite-patch.zip, ~40 МБ
+adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
+# TWRP → Install → zip → Reboot → System
+```
+
+`make_patch_zip.ps1` берёт готовый `build.prop` (стоковый + блок ZerOS) и
+собранные артефакты (`bootanimation.zip`, оверлеи, `Settings.apk`,
+`Updater.apk`), пишет `md5sums.txt` и упаковывает `update-binary` с правом
+`0755`. Скрипт установки сам находит раздел (монтирует `mmcblk0p24` в
+`/mnt/zerosys`, ищет каталог с `build.prop` и `product/overlay`), копирует
+прежние файлы в `/sdcard/zerobak-patch-<дата>/`, проверяет md5 после записи.
+
+**2. Полный образ system** (с нуля, без базовой LOS — только system):
+в релизе лежит `ZerOS-I-1.0-marmite-system.img.7z` (3,5 ГБ → 449 МБ),
+внутри — образ раздела:
+
+```powershell
+7z x ZerOS-I-1.0-marmite-system.img.7z
+fastboot flash system system.img
+```
+
+`boot`, `vendor` и `recovery` не входят и не трогаются. Образ снят с
+работающего раздела (`dd` при смонтированном ro `/system`), `e2fsck -fn`
+чистый, md5 файлов внутри сверены с исходниками.
+
+Ручной путь (adb + root), если нет ни TWRP под рукой, ни желания шить образ:
+перемонтировать раздел (`mount -o rw /dev/block/bootdevice/by-name/system
+/mnt/sys`), скопировать файлы в `/mnt/sys/system/...`, выставить
+`chmod`/`chown`/`chcon`, `sync`, перезагрузиться.
+
+## Проверка после загрузки
+
+```powershell
+adb shell getprop ro.build.display.id            # Zeros_marmite 1.0 ...
+adb shell getprop ro.lineage.version             # 1.0
+adb shell cmd overlay list | findstr zeroc       # [x] org.zeroc.logo (остальные статические и в списке не видны)
+adb shell cmd overlay dump org.zeroc.theme.accent # mState: STATE_ENABLED_STATIC, /product/overlay/ZerOSAccent.apk
 adb shell su -c "idmap2 dump --idmap-path /data/resource-cache/product@overlay@ZerOSAccent.apk@idmap"  # color/accent_device_default_*
-adb shell settings get system notification_sound # заводской Argon
 adb shell settings get secure theme_customization_overlay_packages  # null — тема не выбрана, она вшита
 ```
 
-Если в «Стилях» выбрать другой акцент, он ляжет поверх запечённого (runtime-
-оверлеи идут после статических), а «Сброс к заводской» вернёт тему ZerOS.
+В интерфейсе: «О телефоне» → «Версия ZerOS I» = `1.0`, обновлятор — «ZerOS
+1.0», акцент в переключателях — `#E6125E`. Если в «Стилях» выбрать другой
+акцент, он ляжет поверх запечённого (runtime-оверлеи идут после статических),
+а «Сброс к заводской» вернёт тему ZerOS.
 
 ## Откат
 
-```powershell
-adb shell su -c "magisk --remove-module zerobrand"
-adb reboot
-```
+- Патч-zip: перепрошить LineageOS 17.1 тем же zip-ом, что ставили (вернёт
+  system), либо вернуть файлы из `/sdcard/zerobak-patch-<дата>/`.
+- Полный образ: перепрошить стоковую LineageOS 17.1.
+- Если брендинг ставился модулем (старые версии): удалить
+  `/data/adb/modules/zerobrand` и перезагрузиться.
 
-Или выключить модуль в приложении Magisk. Вместе с модулем уходят свойства,
-анимация, тема и логотип: статических оверлеев в `/system/product/overlay`
-больше нет, система возвращается к родной теме Lineage. Обои и звуки остаются
-родными.
+Обои и звуки не трогаются — остаются родными Lineage.
 
 ## Оговорки
 
@@ -191,19 +259,20 @@ adb reboot
   которые по ней выбирают доступные функции (LineageParts и т.п.), могут
   спрятать часть настроек.
 - `ro.lineagelegal.url=no` — ссылка на юридическую страницу станет нерабочей.
-- Свойства применяются на этапе `post-fs-data`, до старта zygote, поэтому
-  приложения видят уже подменённые значения. Ранний init и ядро видят исходные.
+- Свойства лежат в конце `/system/build.prop`, поэтому их читает уже
+  `init` при загрузке: приложения видят значения ZerOS, а не подмену поверх
+  стока. Ранний init (до `build.prop`) и ядро видят исходные строки.
 - Оверлей статический и привязан к `org.lineageos.lineageparts`: после
   обновления LineageParts имя ресурса может измениться — тогда логотип просто
   перестанет подменяться, остальное продолжит работать.
-- Splash-экран загрузчика (`раздел splash`, логотип Wileyfox) модуль **не
-  трогает**.
+- Splash-экран загрузчика (`раздел splash`, логотип Wileyfox) **не
+  трогается**.
 - Тема ZerOS вшита статическими оверлеями, поэтому «сброс к заводской» в
-  «Стилях» возвращает именно её, а не стоковую тему Lineage. Выключить её
-  можно только отключением модуля. Оверлеи темы лежат в `/system/product/overlay`
-  (`ZerOSAccent.apk`, `ZerOSFont.apk`, `ZerOSShape.apk`) и привязаны к
+  «Стилях» возвращает именно её, а не стоковую тему Lineage. Убрать её можно
+  только заменой/удалением файлов оверлеев в `/system/product/overlay`.
+  Оверлеи темы привязаны к
   ресурсам `android` по именам: если в новой прошивке ресурс переименуют,
   соответствующий оверлей просто перестанет подменять значение.
-- Обои (`/data/system/users/0/wallpaper`) модуль не трогает: на телефоне
+- Обои (`/data/system/users/0/wallpaper`) установка не трогает: на телефоне
   лежат родные Lineage. Их служебный `wallpaper_info.xml` при загрузке может
   переписываться самой системой — это нормально.

@@ -26,9 +26,10 @@
   activity `.lineage.LineageLauncher`, APK в
   `/system/product/priv-app/TrebuchetQuickStep/`. Своего лаунчера в ZerOS I
   пока нет.
-- Активны три Magisk-модуля: `zerobrand` (свойства системы, загрузочная
-  анимация, тема), `zerosettings` («О телефоне»), `zeroupdater`
-  (название в обновляторе).
+- Брендинг **записан прямо в `/system`** (без Magisk): в конец `build.prop`
+  добавлен блок свойств ZerOS, заменены загрузочная анимация, `Settings.apk`
+  и `Updater.apk`, добавлены статические RRO темы и логотипа. Magisk-модулей
+  брендинга на телефоне больше нет; оригиналы файлов — в `/data/zerobak/`.
 - Свойства: в «О телефоне» строка «Версия ZerOS I» показывает `1.0` (значение
   из `ro.lineage.version`). Подробности — в `firmware/zerobrand/README.md`.
 - Брендинг: своя загрузочная анимация (клип «ZeroS» с плывущими линиями,
@@ -40,22 +41,24 @@
 ## Что в папке
 
 `firmware/` — `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка
-LineageOS; Magisk-модули `zerobrand`, `zerosettings`, `zeroupdater`.
+LineageOS; сборка брендинга (`zerobrand`, `zerosettings`, `zeroupdater`) и
+`make_patch_zip.ps1` — патч-zip с брендингом для TWRP.
 
 `home/` — заметка о домашнем экране: эксперименты с лаунчерами (HomeWatch,
 ZerHome) удалены, их исходники остались в истории git.
 
 ## Рут
 
-Root (Magisk) нужен только для установки модулей: они подкладывают файлы в
-`/system/product` через overlay Magisk. Выключили модуль и перезагрузились —
-вернулось стоковое значение. Лаунчеру root не нужен.
+Root (Magisk) больше не нужен для брендинга: файлы лежат в `/system` и
+работают без него. Модули `zerobrand`, `zerosettings`, `zeroupdater` не
+установлены — их папки в `firmware/` остались сборщиками файлов. Лаунчеру root
+не нужен.
 
 ## Как прошивали
 
 Полный порядок — в `firmware/README.md`. Кратко: разблокировка загрузчика →
-TWRP с datafix → LineageOS 17.1 через `flash_los.ps1` → Magisk 31.0 → модули
-`zerobrand`, `zerosettings`, `zeroupdater`.
+TWRP с datafix → LineageOS 17.1 через `flash_los.ps1` → Magisk 31.0 →
+брендинг: патч-zip в TWRP или полный `system.img` через fastboot.
 
 Не трогаем: `preloader`, `lk`, `seccfg`, раздел `recovery` (TWRP остаётся
 рабочим).

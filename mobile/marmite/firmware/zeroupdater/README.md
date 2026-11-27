@@ -1,8 +1,8 @@
 # zeroupdater — «ZerOS 1.0» в обновляторе
 
-Magisk-модуль подменяет системный обновлятор LineageOS
-(`/system/priv-app/Updater/Updater.apk`) на пересобранный с другим названием
-системы в интерфейсе.
+Пересобранный системный обновлятор LineageOS: APK заменяет
+`/system/priv-app/Updater/Updater.apk` и с версии 1.0 лежит прямо в системном
+разделе (без Magisk). Отличие — название системы в интерфейсе.
 
 | Было | Стало |
 |---|---|
@@ -52,30 +52,35 @@ A4:0D:A8:0A:59:D1:70:CA:A9:50:CF:15:C1:8C:45:4D:47:A3:9B:26:98:9D:8B:64:0E:CD:74
 
 Шаги: `adb pull` → `apktool if framework-res.apk` → `apktool d` →
 `patch_res.py` → `apktool b` → `zipalign -p 4` → `apksigner sign` →
-проверка сертификата → `make_module.py`.
+проверка сертификата → `make_module.py` (модуль — только старый способ,
+основной артефакт — `dist\Updater.apk`).
 
 ## Установка
 
+APK попадает в `/system/priv-app/Updater/Updater.apk` в составе общего патча
+брендинга (`..\make_patch_zip.ps1`) или `system.img` — отдельно ставить ничего
+не нужно. Вручную:
+
 ```powershell
-adb push dist\zeroupdater-1.0.zip /data/local/tmp/zeroupdater.zip
-adb shell su -c "magisk --install-module /data/local/tmp/zeroupdater.zip"
-adb shell su -c "rm -rf /data/system/package_cache"
+adb push dist\Updater.apk /data/local/tmp/Updater.apk
+adb shell su -c "mount -o rw /dev/block/bootdevice/by-name/system /mnt/sys"
+adb shell su -c "cp /data/local/tmp/Updater.apk /mnt/sys/system/priv-app/Updater/Updater.apk"
+adb shell su -c "chmod 644 /mnt/sys/system/priv-app/Updater/Updater.apk"
+adb shell su -c "chcon u:object_r:system_file:s0 /mnt/sys/system/priv-app/Updater/Updater.apk"
 adb reboot
 ```
 
-`package_cache` чистится потому, что PackageManager иначе продолжает отдавать
-закэшированный разбор системного APK.
+`package_cache` при замене реального файла можно не чистить: PackageManager
+сверяет mtime/размер при загрузке.
 
 Проверка: открыть «Настройки → Система → Обновление» или запустить
 `org.lineageos.updater/.UpdatesActivity`, в шапке должно быть `ZerOS` и `1.0`.
 
 ## Откат
 
-```powershell
-adb shell su -c "magisk --remove-module zeroupdater"
-adb shell su -c "rm -rf /data/system/package_cache"
-adb reboot
-```
+Вернуть прежний APK из `/sdcard/zerobak-patch-<дата>/Updater.apk` тем же
+способом (или перепрошить LineageOS 17.1). Старый Magisk-модуль: удалить
+`/data/adb/modules/zeroupdater` и перезагрузиться.
 
 ## Оговорки
 
@@ -85,5 +90,5 @@ adb reboot
   падать с ошибкой проверки — сборки `1.0` для marmite на сервере нет.
   Название в шапке это не лечит: чтобы обновлятор обновлял ZerOS, нужен свой
   сервер или GitHub Releases и правка URL.
-- После OTA/перепрошивки обновлятор вернётся стоковым, модуль нужно собрать
+- После OTA/перепрошивки обновлятор вернётся стоковым, правку нужно собрать
   заново.
