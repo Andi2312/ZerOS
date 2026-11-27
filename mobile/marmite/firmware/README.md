@@ -3,7 +3,7 @@
 Устройство: Wileyfox Swift 2, `marmite`, MSM8937 (Snapdragon 430), 2/16 ГБ,
 заводская прошивка была Android 7.1.2 (API 25), сборка `TOS317G - N2G48B`.
 
-## Текущее состояние (26.11.2026)
+## Текущее состояние (27.11.2026)
 
 - Загрузчик **разблокирован** (`ro.boot.flash.locked=0`,
   `verifiedbootstate=orange`).
@@ -25,9 +25,9 @@
   остались в истории git.
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
-  `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`) и ставит свою
-  загрузочную анимацию. Файлы `build.prop` не меняются, модуль выключается.
-  Текущая версия — **ZerOS I 1.0**.
+  `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`), ставит свою
+  загрузочную анимацию, звуки интерфейса и логотип ZerOS в LineageParts. Файлы
+  `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
   и в репозиторий не входят: готовая прошивка публикуется в **Releases**.
@@ -422,12 +422,14 @@ sync
 
 ## Брендинг ZerOS
 
-`zerobrand/` — Magisk-модуль с `system.prop`: при загрузке `resetprop` меняет
+`zerobrand/` — Magisk-модуль: `system.prop` (при загрузке `resetprop` меняет
 `ro.product.*.name`, `ro.build.display.id`, `ro.build.flavor` и `ro.lineage.*`
-на ZerOS-значения. Системные файлы не трогаются, модуль обратим.
+на ZerOS-значения), загрузочная анимация, звуки интерфейса и логотип ZerOS в
+LineageParts. Системные файлы не перезаписываются, модуль обратим.
 
 ```powershell
 powershell -File zerobrand\bootanimation\make_bootanimation.ps1   # собрать bootanimation.zip
+powershell -File zerobrand\logo\build_overlay.ps1                 # собрать RRO-оверлей логотипа
 python zerobrand\make_zip.py
 adb push zerobrand\dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
@@ -440,9 +442,20 @@ adb reboot
 `zerobrand\bootanimation\make_bootanimation.ps1` (размер экрана задаётся
 параметрами `-Width`/`-Height`).
 
+Звуки — `zerobrand\sounds\ui\*.ogg` → `/system/product/media/audio/ui/`:
+тики, клавиши, камера, видео, блокировка/разблокировка, зарядка, низкий заряд,
+док. Короткие и мягкие, OGG Vorbis; генератор — `zerobrand\sounds\make_sounds.py`.
+
+Логотип — статический RRO-оверлей `zerobrand\logo\ZerOSLogo.apk` в
+`/system/product/overlay`: подменяет `drawable/logo_lineage` в LineageParts,
+поэтому в пасхалке («О телефоне» → тап по «Версия ZerOS I») рисуется wordmark
+«ZerOS I» вместо логотипа LineageOS. Оверлей подписан платформенным ключом;
+ставить его отдельным APK нельзя — только как предустановленный (это делает
+модуль).
+
 Откат: выключить модуль в Magisk (или `magisk --remove-module zerobrand`) и
-перезагрузиться. Таблица значений и оговорки (Updater, Lineage SDK) — в
-`zerobrand/README.md`.
+перезагрузиться. Таблица значений, детали сборки и оговорки (Updater,
+Lineage SDK) — в `zerobrand/README.md`.
 
 ## Настройки: «Версия ZerOS I»
 

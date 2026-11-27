@@ -3,4 +3,4 @@ name=ZerOS branding
 version=1.0
 versionCode=10
 author=ZeroC
-description=ZerOS I: брендинг в build.prop и своя загрузочная анимация. Выключить — отключить модуль в Magisk, после перезагрузки вернётся LineageOS.
+description=ZerOS I: свойства системы, своя загрузочная анимация, звуки интерфейса и логотип ZerOS в LineageParts. Выключить — отключить модуль в Magisk, после перезагрузки вернётся LineageOS.

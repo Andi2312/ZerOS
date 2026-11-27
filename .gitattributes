@@ -1,0 +1,9 @@
+# Magisk читает module.prop и system.prop построчно: CRLF ломает id/значения.
+*.prop text eol=lf
+*.sh text eol=lf
+
+# Бинарные артефакты и ресурсы
+*.ogg binary
+*.png binary
+*.zip binary
+*.apk binary
