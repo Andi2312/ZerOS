@@ -1,9 +1,9 @@
 # zerobrand — брендинг ZerOS
 
 Magisk-модуль брендинга: подменяет LineageOS-строки в свойствах системы,
-ставит свою загрузочную анимацию, звуки интерфейса и уведомлений, логотип
-ZerOS в LineageParts и помощник для звука отключения зарядки. Файлы
-`build.prop` не меняются, `/system` и `/vendor` не
+ставит свою загрузочную анимацию, звуки интерфейса, уведомления, рингтон и
+будильник, логотип ZerOS в LineageParts и помощник для звука отключения
+зарядки. Файлы `build.prop` не меняются, `/system` и `/vendor` не
 перезаписываются — Magisk накладывает их оверлеем. Выключили модуль и
 перезагрузились — вернулся LineageOS.
 
@@ -75,14 +75,27 @@ LowBattery  Undock  Unlock  VideoRecord  VideoStop  camera_click  camera_focus
 потока, и git покажет изменения у всех `.ogg`, хотя звук тот же — коммитить
 стоит только те, что действительно менялись.
 
-### Звук уведомления
+### Звуки уведомления, рингтона и будильника
 
-`sounds/notifications/ZerOS.ogg` → `/system/product/media/audio/notifications/`.
-Мягкий колокольчик C6 + G6, 880 мс. Файл просто появляется в списке звуков
-уведомлений, а `service.sh` при загрузке подставляет его в
-`settings put system notification_sound`, если пользователь ещё не выбрал
-свой (заводской — `Argon`) или если id файла в базе медиа сменился. Выбор
-пользователя скрипт не перебивает: любой другой звук остаётся.
+Свои звуки с разными названиями для трёх типов:
+
+| файл | настройка | характер |
+|---|---|---|
+| `sounds/notifications/Glint.ogg` | `notification_sound` | блик G6, 420 мс |
+| `sounds/ringtones/FirstLight.ogg` | `ringtone` | «First Light»: 8 тактов, 90 BPM, A–E/G♯–F♯m–D, музыкальная шкатулка, 21,3 с, петля |
+| `sounds/alarms/Sunrise.ogg` | `alarm_alert` | «Sunrise»: восходящая фраза C5–E5–G5–C6 по полутонам вверх, 20 с, петля |
+
+Файлы кладутся в `/system/product/media/audio/{notifications,ringtones,alarms}`
+и сразу видны в списках выбора. `service.sh` при загрузке подставляет их в
+настройки, но только если пользователь ещё не выбрал свои: заводские
+`Argon` (уведомление, будильник) и `Orion` (рингтон) заменяются, любой другой
+выбор остаётся. Если id файла в базе медиа сменился (пересоздали базу),
+скрипт находит его заново по имени. `uninstall.sh` возвращает заводские
+звуки.
+
+Петли собраны так, что хвосты затуханий заворачиваются в начало: стык без
+щелчка, `MediaPlayer` может крутить файл бесконечно. Поэтому у петель
+`fade_ms=0` — обычное затухание в 4 мс на концах дало бы провал на стыке.
 
 ### Звук отключения зарядки
 
@@ -150,7 +163,9 @@ adb shell getprop ro.lineage.version
 adb shell ls -l /system/product/media/audio/ui/Effect_Tick.ogg
 adb shell cmd overlay list | findstr zeroc       # [x] org.zeroc.logo
 adb shell pm path org.zeroc.charge               # /system/product/app/ZerOSCharge/...
-adb shell settings get system notification_sound # ...?title=ZerOS&canonical=1
+adb shell settings get system notification_sound # ...?title=Glint&canonical=1
+adb shell settings get system ringtone           # ...?title=FirstLight&canonical=1
+adb shell settings get system alarm_alert        # ...?title=Sunrise&canonical=1
 ```
 
 
@@ -162,9 +177,9 @@ adb reboot
 ```
 
 Или выключить модуль в приложении Magisk. Вместе с модулем уходят свойства,
-анимация, звуки, приложение и логотип. `uninstall.sh` возвращает заводской
-звук уведомления (Argon), чтобы настройка не указывала на пропавший файл;
-если вы выбирали свой звук, он останется.
+анимация, звуки, приложение и логотип. `uninstall.sh` возвращает заводские
+звуки (Argon / Orion / Argon), чтобы настройки не указывали на пропавшие
+файлы; если вы выбирали свои, они останутся.
 
 ## Оговорки
 

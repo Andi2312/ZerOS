@@ -1,12 +1,49 @@
 #!/system/bin/sh
-# ZerOS branding: звук уведомления ZerOS по умолчанию.
+# ZerOS branding: свои звуки по умолчанию - уведомление Glint, рингтон
+# First Light, будильник Sunrise.
 #
-# Файл /system/product/media/audio/notifications/ZerOS.ogg кладёт сам модуль.
-# Здесь мы один раз подставляем его в настройку, но только если пользователь
-# ещё не выбрал свой звук (заводское значение - Argon).
-# Отключить: settings put system notification_sound <свой uri>.
+# Файлы кладёт сам модуль в /system/product/media/audio/{notifications,
+# ringtones,alarms}. Здесь мы подставляем их в настройки, но только если
+# пользователь ещё не выбрал свои (заводские - Argon / Orion / Argon).
+# Отключить: settings put system <ringtone|alarm_alert|notification_sound> ...
 
-[ -f /system/product/media/audio/notifications/ZerOS.ogg ] || exit 0
+MODDIR=${0%/*}
+
+find_id() {
+    content query --uri content://media/internal/audio/media \
+        --projection _id:_display_name \
+        --where "_display_name='$1'" 2>/dev/null \
+        | sed -n 's/.*_id=\([0-9][0-9]*\).*/\1/p' | head -n 1
+}
+
+# $1 - настройка, $2 - название, $3 - файл, $4 - что можно заменить (glob)
+set_default() {
+    setting=$1
+    title=$2
+    file=$3
+    replaceable=$4
+
+    cur=$(settings get system "$setting" 2>/dev/null)
+    case "$cur" in
+        *"$title"*)
+            # уже наш звук; id мог смениться, если базу медиа пересоздали
+            content query --uri "${cur%%\?*}" >/dev/null 2>&1 && return 0
+            ;;
+        null|"") ;;
+        *)
+            matched=0
+            for pat in $replaceable; do
+                case "$cur" in $pat) matched=1; break ;; esac
+            done
+            [ "$matched" = 1 ] || return 0
+            ;;
+    esac
+
+    id=$(find_id "$file")
+    [ -n "$id" ] || return 0
+    settings put system "$setting" \
+        "content://media/internal/audio/media/$id?title=$title&canonical=1"
+}
 
 # ждём завершения загрузки
 i=0
@@ -15,30 +52,13 @@ while [ "$(getprop sys.boot_completed)" != "1" ] && [ $i -lt 90 ]; do
     i=$((i + 1))
 done
 
-cur=$(settings get system notification_sound 2>/dev/null)
-case "$cur" in
-    null|"") ;;
-    *Argon*) ;;
-    *ZerOS*)
-        # уже наш звук - но id мог смениться, если базу медиа пересоздали
-        content query --uri "${cur%%\?*}" >/dev/null 2>&1 && exit 0
-        ;;
-    *) exit 0 ;;
-esac
-
-# внутренний том media сканируется на загрузке - ждём, пока появится файл
+# внутренний том media сканируется на загрузке - ждём, пока появятся файлы
 i=0
-id=
-while [ -z "$id" ] && [ $i -lt 30 ]; do
-    id=$(content query --uri content://media/internal/audio/media \
-        --projection _id:_display_name \
-        --where "_display_name='ZerOS.ogg'" 2>/dev/null \
-        | sed -n 's/.*_id=\([0-9][0-9]*\).*/\1/p' | head -n 1)
-    [ -n "$id" ] || sleep 2
+while [ -z "$(find_id FirstLight.ogg)" ] && [ $i -lt 30 ]; do
+    sleep 2
     i=$((i + 1))
 done
 
-[ -n "$id" ] || exit 0
-
-settings put system notification_sound \
-    "content://media/internal/audio/media/$id?title=ZerOS&canonical=1"
+set_default notification_sound Glint Glint.ogg '*Argon* *ZerOS*'
+set_default ringtone FirstLight FirstLight.ogg '*Orion*'
+set_default alarm_alert Sunrise Sunrise.ogg '*Argon*'

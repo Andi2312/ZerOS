@@ -26,8 +26,8 @@
 - Брендинг: Magisk-модуль **`zerobrand`** (`zerobrand/`) при загрузке подменяет
   LineageOS-строки в свойствах на ZerOS (`getprop ro.build.display.id` →
   `Zeros_marmite 1.0 ...`, `ro.lineage.version` → `1.0`), ставит свою
-  загрузочную анимацию, звуки интерфейса и уведомлений, логотип ZerOS в
-  LineageParts и помощник для звука отключения зарядки. Файлы
+  загрузочную анимацию, звуки интерфейса, уведомления, рингтон и будильник,
+  логотип ZerOS в LineageParts и помощник для звука отключения зарядки. Файлы
   `build.prop` не меняются, модуль выключается. Текущая версия — **ZerOS I 1.0**.
 - Личные файлы прежней системы сохранены локально и в репозиторий не попадают.
 - Образы и архивы (recovery, сток 7.1.2, crDroid, Magisk, логи) лежат локально
@@ -449,9 +449,10 @@ adb reboot
 Звуки — `zerobrand\sounds\ui\*.ogg` → `/system/product/media/audio/ui/`:
 тики, клавиши, камера, видео, блокировка/разблокировка, зарядка (старт и
 стоп), низкий заряд, док. Короткие и мягкие, OGG Vorbis; генератор —
-`zerobrand\sounds\make_sounds.py`. Звук уведомления `sounds\notifications\ZerOS.ogg`
-ставится по умолчанию скриптом `zerobrand\service.sh`, если пользователь не
-выбрал свой. Звук отключения зарядки играет `zerobrand\charge\ZerOSCharge.apk`
+`zerobrand\sounds\make_sounds.py`. Свои уведомление, рингтон и будильник —
+`Glint`, `First Light` и `Sunrise` в `sounds\{notifications,ringtones,alarms}`;
+`zerobrand\service.sh` ставит их по умолчанию, если пользователь не выбрал
+свои. Звук отключения зарядки играет `zerobrand\charge\ZerOSCharge.apk`
 (receiver на `ACTION_POWER_DISCONNECTED`).
 
 Логотип — статический RRO-оверлей `zerobrand\logo\ZerOSLogo.apk` в

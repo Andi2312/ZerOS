@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """Собрать Magisk-модуль zerobrand: свойства, загрузочная анимация,
-звуки интерфейса, звук уведомления, логотип ZerOS в LineageParts и
-помощник для звука отключения зарядки.
+звуки интерфейса, звуки уведомления/рингтона/будильника, логотип ZerOS в
+LineageParts и помощник для звука отключения зарядки.
 
 Модуль подменяет свойства через resetprop и накладывает файлы оверлеем
 Magisk: /system/media/bootanimation.zip, /system/product/media/audio/ui/*.ogg,
-/system/product/media/audio/notifications/ZerOS.ogg,
+/system/product/media/audio/{notifications,ringtones,alarms}/*.ogg,
 /system/product/overlay/ZerOSLogo.apk и
 /system/product/app/ZerOSCharge/ZerOSCharge.apk.
 
@@ -14,8 +14,8 @@ Magisk: /system/media/bootanimation.zip, /system/product/media/audio/ui/*.ogg,
     powershell -File logo\\build_overlay.ps1
     powershell -File charge\\build_charge.ps1
 
-Звуки лежат готовыми в sounds\\ui и sounds\\notifications
-(генератор — sounds\\make_sounds.py).
+Звуки лежат готовыми в sounds\\ui, sounds\\notifications, sounds\\ringtones
+и sounds\\alarms (генератор — sounds\\make_sounds.py).
 """
 import os
 import zipfile
@@ -31,6 +31,9 @@ BOOT = os.path.join(ROOT, 'bootanimation.zip')
 SOUNDS = os.path.join(ROOT, 'sounds', 'ui')
 # Звуки уведомлений: system/product/media/audio/notifications/*.ogg
 NOTIFS = os.path.join(ROOT, 'sounds', 'notifications')
+# Рингтоны и будильники
+RINGTONES = os.path.join(ROOT, 'sounds', 'ringtones')
+ALARMS = os.path.join(ROOT, 'sounds', 'alarms')
 # RRO-оверлей логотипа: system/product/overlay/ZerOSLogo.apk
 LOGO = os.path.join(ROOT, 'logo', 'ZerOSLogo.apk')
 # Приложение звука отключения зарядки: system/product/app/ZerOSCharge
@@ -45,6 +48,9 @@ def main():
             raise SystemExit('нет %s - сначала запусти %s' % (path, hint))
     if not os.path.isdir(SOUNDS):
         raise SystemExit('нет %s' % SOUNDS)
+    for folder in (NOTIFS, RINGTONES, ALARMS):
+        if not os.path.isdir(folder):
+            raise SystemExit('нет %s - сначала запусти sounds\\make_sounds.py' % folder)
 
     os.makedirs(DIST, exist_ok=True)
     with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED) as z:
@@ -61,6 +67,11 @@ def main():
             if name.lower().endswith('.ogg'):
                 z.write(os.path.join(NOTIFS, name),
                         'system/product/media/audio/notifications/' + name)
+        for folder, target in ((RINGTONES, 'ringtones'), (ALARMS, 'alarms')):
+            for name in sorted(os.listdir(folder)):
+                if name.lower().endswith('.ogg'):
+                    z.write(os.path.join(folder, name),
+                            'system/product/media/audio/%s/' % target + name)
         z.write(LOGO, 'system/product/overlay/ZerOSLogo.apk')
         z.write(CHARGE, 'system/product/app/ZerOSCharge/ZerOSCharge.apk')
     print('OK:', OUT, os.path.getsize(OUT), 'байт')

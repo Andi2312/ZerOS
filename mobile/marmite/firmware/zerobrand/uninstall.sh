@@ -1,25 +1,34 @@
 #!/system/bin/sh
-# zerobrand: вернуть заводской звук уведомления (Argon), если стоит ZerOS.
-# Иначе после удаления модуля настройка указывала бы на пропавший файл.
+# zerobrand: вернуть заводские звуки, если стоят наши, иначе после удаления
+# модуля настройки будут указывать на пропавшие файлы.
 
-cur=$(settings get system notification_sound 2>/dev/null)
-case "$cur" in
-    *ZerOS*) ;;
-    *) exit 0 ;;
-esac
-
-i=0
-id=
-while [ -z "$id" ] && [ $i -lt 10 ]; do
-    id=$(content query --uri content://media/internal/audio/media \
+find_id() {
+    content query --uri content://media/internal/audio/media \
         --projection _id:_display_name \
-        --where "_display_name='Argon.ogg'" 2>/dev/null \
-        | sed -n 's/.*_id=\([0-9][0-9]*\).*/\1/p' | head -n 1)
-    [ -n "$id" ] || sleep 1
-    i=$((i + 1))
-done
+        --where "_display_name='$1'" 2>/dev/null \
+        | sed -n 's/.*_id=\([0-9][0-9]*\).*/\1/p' | head -n 1
+}
 
-[ -n "$id" ] || exit 0
+# $1 - настройка, $2 - наше название, $3 - заводской файл, $4 - заводское название
+restore() {
+    cur=$(settings get system "$1" 2>/dev/null)
+    case "$cur" in
+        *"$2"*) ;;
+        *) return 0 ;;
+    esac
 
-settings put system notification_sound \
-    "content://media/internal/audio/media/$id?title=Argon&canonical=1"
+    i=0
+    id=
+    while [ -z "$id" ] && [ $i -lt 10 ]; do
+        id=$(find_id "$3")
+        [ -n "$id" ] || sleep 1
+        i=$((i + 1))
+    done
+    [ -n "$id" ] || return 0
+    settings put system "$1" \
+        "content://media/internal/audio/media/$id?title=$4&canonical=1"
+}
+
+restore notification_sound Glint Argon.ogg Argon
+restore ringtone FirstLight Orion.ogg Orion
+restore alarm_alert Sunrise Argon.ogg Argon
