@@ -35,6 +35,7 @@ $items = [ordered]@{
     'system/product/overlay/ZerOSLogo.apk'           = Join-Path $here 'zerobrand\logo\ZerOSLogo.apk'
     'system/product/priv-app/Settings/Settings.apk'  = Join-Path $here 'zerosettings\dist\Settings.apk'
     'system/priv-app/Updater/Updater.apk'            = Join-Path $here 'zeroupdater\dist\Updater.apk'
+    'system/priv-app/ZerOSAbout/ZerOSAbout.apk'      = Join-Path $here 'zerocabout\dist\ZerOSAbout.apk'
 }
 
 foreach ($key in $items.Keys) {

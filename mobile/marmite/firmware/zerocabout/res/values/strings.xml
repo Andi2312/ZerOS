@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">О телефоне</string>
+
+    <string name="section_system">Система</string>
+    <string name="section_device">Устройство</string>
+    <string name="section_zeros">ZerOS</string>
+
+    <string name="label_android">Версия Android</string>
+    <string name="label_security">Патч безопасности</string>
+    <string name="label_kernel">Ядро</string>
+    <string name="label_build">Номер сборки</string>
+    <string name="label_build_date">Дата сборки</string>
+
+    <string name="label_model">Модель</string>
+    <string name="label_device">Кодовое имя</string>
+    <string name="label_platform">Платформа</string>
+    <string name="label_screen">Экран</string>
+    <string name="label_memory">Оперативная память</string>
+    <string name="label_storage">Накопитель</string>
+
+    <string name="label_generation">Поколение</string>
+    <string name="label_version">Версия</string>
+    <string name="label_release">Тип сборки</string>
+    <string name="label_sdk">Lineage SDK</string>
+
+    <string name="action_updates">Обновления</string>
+    <string name="footer">ZeroC · 2026</string>
+
+    <string name="official">Официальная</string>
+    <string name="unofficial">Неофициальная</string>
+</resources>

@@ -178,6 +178,7 @@ powershell -File logo\build_overlay.ps1
 | `product/overlay/ZerOSLogo.apk` | статический RRO: логотип в LineageParts |
 | `product/priv-app/Settings/Settings.apk` | «Версия ZerOS I» |
 | `priv-app/Updater/Updater.apk` | «ZerOS 1.0» в обновляторе |
+| `priv-app/ZerOSAbout/ZerOSAbout.apk` | отдельное приложение «О телефоне» |
 
 Владелец `root:root`; `build.prop` — `600`, остальное — `644`. Контексты:
 оверлеи — `u:object_r:vendor_overlay_file:s0`, остальные файлы —

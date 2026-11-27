@@ -424,8 +424,8 @@ sync
 ## Брендинг ZerOS
 
 С версии 1.0 брендинг **записан файлами в реальный `/system`** — без Magisk.
-Папки `zerobrand/`, `zerosettings/`, `zeroupdater/` остались сборщиками
-артефактов; модули из них больше не устанавливаются.
+Папки `zerobrand/`, `zerosettings/`, `zeroupdater/`, `zerocabout/` остались
+сборщиками артефактов; модули из первых трёх больше не устанавливаются.
 
 | Файл в `/system` | Что |
 |---|---|
@@ -435,6 +435,7 @@ sync
 | `product/overlay/ZerOSLogo.apk` | статический RRO: логотип в LineageParts |
 | `product/priv-app/Settings/Settings.apk` | «Версия ZerOS I» |
 | `priv-app/Updater/Updater.apk` | «ZerOS 1.0» в обновляторе |
+| `priv-app/ZerOSAbout/ZerOSAbout.apk` | приложение «О телефоне» |
 
 `/vendor` — squashfs (`ro`), поэтому `ro.product.vendor.name` и
 `ro.product.odm.name` остались `lineage_marmite`; строки в `build.prop` на
@@ -526,6 +527,24 @@ APK; отдельная установка модулем больше не ну
 
 Число в шапке берётся из `ro.lineage.build.version`, поэтому менять версию
 можно без пересборки APK. Подробности — в `zeroupdater/README.md`.
+
+## «О телефоне»: приложение ZerOSAbout
+
+Отдельное приложение `org.zeroc.about` в
+`/system/priv-app/ZerOSAbout/ZerOSAbout.apk` — своя иконка «О телефоне» в меню
+приложений. Показывает живые данные устройства (версия Android, патч
+безопасности, ядро, сборка, модель, экран, память, накопитель) и блок ZerOS
+(поколение, версия, тип сборки, Lineage SDK), кнопку «Обновления» и шапку
+`ZerOS` с розовым акцентом и Rubik. Штатный экран в настройках не меняется.
+
+```powershell
+.\zerocabout\build.ps1          # → zerocabout\dist\ZerOSAbout.apk
+```
+
+Собирается без Gradle: `aapt2` + `javac` + `dx` + `zipalign` + `apksigner`,
+нужен минимальный SDK (platform 29 и build-tools 29.0.3) и платформенный
+ключ. Сборка идёт во временном ASCII-каталоге — `aapt2` не открывает
+кириллические пути. Подробности — в `zerocabout/README.md`.
 
 ## Важно
 

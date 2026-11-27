@@ -12,6 +12,7 @@ ZerOS I 1.0 — Wileyfox Swift 2 (marmite)
   system/product/overlay/ZerOSLogo.apk         (логотип в LineageParts)
   system/product/priv-app/Settings/Settings.apk  («Версия ZerOS I»)
   system/priv-app/Updater/Updater.apk          («ZerOS 1.0» в обновляторе)
+  system/priv-app/ZerOSAbout/ZerOSAbout.apk    (приложение «О телефоне»)
 
 Перед заменой копирует прежние файлы в /sdcard/zerobak-patch-<дата>/.
 
@@ -31,6 +32,8 @@ ZerOS I 1.0 — Wileyfox Swift 2 (marmite)
 Проверка
 --------
 Настройки → О телефоне: «Версия ZerOS I» = 1.0.
+В меню приложений — «О телефоне» (значок «?»): вкладки «Система»,
+«Устройство», «ZerOS».
 Обновлятор: в шапке «ZerOS 1.0».
 Тема: акцент розовый, шрифт Rubik, иконки скруглённые.
 

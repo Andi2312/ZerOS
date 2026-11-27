@@ -103,7 +103,8 @@ for f in build.prop \
          product/overlay/ZerOSShape.apk \
          product/overlay/ZerOSLogo.apk \
          product/priv-app/Settings/Settings.apk \
-         priv-app/Updater/Updater.apk; do
+         priv-app/Updater/Updater.apk \
+         priv-app/ZerOSAbout/ZerOSAbout.apk; do
   mkdir -p "$SYS/$(dirname "$f")"
   cp -f "$TMP/system/$f" "$SYS/$f" || die "copy failed: $f"
   case "$f" in

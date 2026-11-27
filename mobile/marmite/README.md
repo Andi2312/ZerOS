@@ -41,8 +41,9 @@
 ## Что в папке
 
 `firmware/` — `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка
-LineageOS; сборка брендинга (`zerobrand`, `zerosettings`, `zeroupdater`) и
-`make_patch_zip.ps1` — патч-zip с брендингом для TWRP.
+LineageOS; сборка брендинга (`zerobrand`, `zerosettings`, `zeroupdater`,
+`zerocabout` — приложение «О телефоне») и `make_patch_zip.ps1` — патч-zip с
+брендингом для TWRP.
 
 `home/` — заметка о домашнем экране: эксперименты с лаунчерами (HomeWatch,
 ZerHome) удалены, их исходники остались в истории git.
