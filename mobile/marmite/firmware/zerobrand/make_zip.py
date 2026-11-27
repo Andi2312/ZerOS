@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
 """Собрать Magisk-модуль zerobrand: свойства, загрузочная анимация,
-звуки интерфейса и логотип ZerOS в LineageParts.
+звуки интерфейса, звук уведомления, логотип ZerOS в LineageParts и
+помощник для звука отключения зарядки.
 
 Модуль подменяет свойства через resetprop и накладывает файлы оверлеем
-Magisk: /system/media/bootanimation.zip, /system/product/media/audio/ui/*.ogg
-и /system/product/overlay/ZerOSLogo.apk.
+Magisk: /system/media/bootanimation.zip, /system/product/media/audio/ui/*.ogg,
+/system/product/media/audio/notifications/ZerOS.ogg,
+/system/product/overlay/ZerOSLogo.apk и
+/system/product/app/ZerOSCharge/ZerOSCharge.apk.
 
-Перед сборкой анимации и логотипа:
+Перед сборкой анимации, логотипа и приложения:
     powershell -File bootanimation\\make_bootanimation.ps1
     powershell -File logo\\build_overlay.ps1
+    powershell -File charge\\build_charge.ps1
 
-Звуки лежат готовыми в sounds\\ui (генератор — sounds\\make_sounds.py).
+Звуки лежат готовыми в sounds\\ui и sounds\\notifications
+(генератор — sounds\\make_sounds.py).
 """
 import os
 import zipfile
@@ -24,15 +29,20 @@ OUT = os.path.join(DIST, 'zerobrand-%s.zip' % VERSION)
 BOOT = os.path.join(ROOT, 'bootanimation.zip')
 # Звуки интерфейса: system/product/media/audio/ui/*.ogg
 SOUNDS = os.path.join(ROOT, 'sounds', 'ui')
+# Звуки уведомлений: system/product/media/audio/notifications/*.ogg
+NOTIFS = os.path.join(ROOT, 'sounds', 'notifications')
 # RRO-оверлей логотипа: system/product/overlay/ZerOSLogo.apk
 LOGO = os.path.join(ROOT, 'logo', 'ZerOSLogo.apk')
+# Приложение звука отключения зарядки: system/product/app/ZerOSCharge
+CHARGE = os.path.join(ROOT, 'charge', 'ZerOSCharge.apk')
 
 
 def main():
-    if not os.path.exists(BOOT):
-        raise SystemExit('нет %s - сначала запусти bootanimation\\make_bootanimation.ps1' % BOOT)
-    if not os.path.exists(LOGO):
-        raise SystemExit('нет %s - сначала запусти logo\\build_overlay.ps1' % LOGO)
+    for path, hint in ((BOOT, 'bootanimation\\make_bootanimation.ps1'),
+                       (LOGO, 'logo\\build_overlay.ps1'),
+                       (CHARGE, 'charge\\build_charge.ps1')):
+        if not os.path.exists(path):
+            raise SystemExit('нет %s - сначала запусти %s' % (path, hint))
     if not os.path.isdir(SOUNDS):
         raise SystemExit('нет %s' % SOUNDS)
 
@@ -40,14 +50,22 @@ def main():
     with zipfile.ZipFile(OUT, 'w', zipfile.ZIP_DEFLATED) as z:
         z.write(os.path.join(ROOT, 'module.prop'), 'module.prop')
         z.write(os.path.join(ROOT, 'system.prop'), 'system.prop')
+        z.write(os.path.join(ROOT, 'service.sh'), 'service.sh')
+        z.write(os.path.join(ROOT, 'uninstall.sh'), 'uninstall.sh')
         z.write(BOOT, 'system/media/bootanimation.zip')
         for name in sorted(os.listdir(SOUNDS)):
             if name.lower().endswith('.ogg'):
                 z.write(os.path.join(SOUNDS, name),
                         'system/product/media/audio/ui/' + name)
+        for name in sorted(os.listdir(NOTIFS)):
+            if name.lower().endswith('.ogg'):
+                z.write(os.path.join(NOTIFS, name),
+                        'system/product/media/audio/notifications/' + name)
         z.write(LOGO, 'system/product/overlay/ZerOSLogo.apk')
+        z.write(CHARGE, 'system/product/app/ZerOSCharge/ZerOSCharge.apk')
     print('OK:', OUT, os.path.getsize(OUT), 'байт')
 
 
 if __name__ == '__main__':
     main()
+

@@ -1,8 +1,9 @@
 # zerobrand — брендинг ZerOS
 
 Magisk-модуль брендинга: подменяет LineageOS-строки в свойствах системы,
-ставит свою загрузочную анимацию, звуки интерфейса и логотип ZerOS в
-LineageParts. Файлы `build.prop` не меняются, `/system` и `/vendor` не
+ставит свою загрузочную анимацию, звуки интерфейса и уведомлений, логотип
+ZerOS в LineageParts и помощник для звука отключения зарядки. Файлы
+`build.prop` не меняются, `/system` и `/vendor` не
 перезаписываются — Magisk накладывает их оверлеем. Выключили модуль и
 перезагрузились — вернулся LineageOS.
 
@@ -61,14 +62,49 @@ PowerShell 5.1 (.NET Framework) с `CompressionLevel.NoCompression` всё ра�
 заряд, док:
 
 ```
-ChargingStarted  Dock  Effect_Tick  KeypressDelete  KeypressInvalid
-KeypressReturn   KeypressSpacebar  KeypressStandard  Lock  LowBattery
-Undock  Unlock  VideoRecord  VideoStop  camera_click  camera_focus
+ChargingStarted  ChargingStopped  Dock  Effect_Tick  KeypressDelete
+KeypressInvalid  KeypressReturn  KeypressSpacebar  KeypressStandard  Lock
+LowBattery  Undock  Unlock  VideoRecord  VideoStop  camera_click  camera_focus
 ```
 
-Звуки короткие и мягкие (18–370 мс), 44,1 кГц, OGG Vorbis. Генератор —
+Звуки короткие и мягкие (18–370 мс), 44,1 кГц, OGG Vorbis. Запись и стоп
+видео — мягкие две ноты (E5 → B5 и обратно) тише остальных. Генератор —
 `sounds/make_sounds.py` (numpy + soundfile), кладёт файлы в `sounds/ui`;
 готовые `.ogg` лежат в git, чтобы сборка модуля не требовала Python-пакетов.
+Повторный запуск генератора перекодирует всё: в Ogg меняется серийный номер
+потока, и git покажет изменения у всех `.ogg`, хотя звук тот же — коммитить
+стоит только те, что действительно менялись.
+
+### Звук уведомления
+
+`sounds/notifications/ZerOS.ogg` → `/system/product/media/audio/notifications/`.
+Мягкий колокольчик C6 + G6, 880 мс. Файл просто появляется в списке звуков
+уведомлений, а `service.sh` при загрузке подставляет его в
+`settings put system notification_sound`, если пользователь ещё не выбрал
+свой (заводской — `Argon`) или если id файла в базе медиа сменился. Выбор
+пользователя скрипт не перебивает: любой другой звук остаётся.
+
+### Звук отключения зарядки
+
+Система играет только звук начала зарядки (`ChargingStarted.ogg`), звука
+отключения в LineageOS 17.1 нет. Его играет маленькое приложение
+`charge/ZerOSCharge.apk` (`org.zeroc.charge`): manifest-receiver на
+`ACTION_POWER_DISCONNECTED` открывает
+`/system/product/media/audio/ui/ChargingStopped.ogg` (нисходящее зеркало
+звука зарядки) и отпускает плеер по завершении. Модуль кладёт APK в
+`/system/product/app/ZerOSCharge`, поэтому оно системное и получает
+системную рассылку. Исходники — smali в `charge/smali`, сборка:
+
+```powershell
+powershell -File charge\build_charge.ps1
+```
+
+Проверка без выдёргивания кабеля (из root-шелла):
+
+```
+am broadcast -a android.intent.action.POWER_DISCONNECTED -n org.zeroc.charge/.PowerReceiver
+```
+
 
 ### Логотип в LineageParts
 
@@ -99,6 +135,7 @@ powershell -File logo\build_overlay.ps1
 ```powershell
 powershell -File bootanimation\make_bootanimation.ps1
 powershell -File logo\build_overlay.ps1
+powershell -File charge\build_charge.ps1
 python make_zip.py
 adb push dist\zerobrand-1.0.zip /data/local/tmp/zerobrand.zip
 adb shell su -c "magisk --install-module /data/local/tmp/zerobrand.zip"
@@ -112,7 +149,10 @@ adb shell getprop ro.build.display.id
 adb shell getprop ro.lineage.version
 adb shell ls -l /system/product/media/audio/ui/Effect_Tick.ogg
 adb shell cmd overlay list | findstr zeroc       # [x] org.zeroc.logo
+adb shell pm path org.zeroc.charge               # /system/product/app/ZerOSCharge/...
+adb shell settings get system notification_sound # ...?title=ZerOS&canonical=1
 ```
+
 
 ## Откат
 
@@ -122,7 +162,9 @@ adb reboot
 ```
 
 Или выключить модуль в приложении Magisk. Вместе с модулем уходят свойства,
-анимация, звуки и логотип.
+анимация, звуки, приложение и логотип. `uninstall.sh` возвращает заводской
+звук уведомления (Argon), чтобы настройка не указывала на пропавший файл;
+если вы выбирали свой звук, он останется.
 
 ## Оговорки
 
