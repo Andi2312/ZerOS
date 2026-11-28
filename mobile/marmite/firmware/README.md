@@ -433,6 +433,8 @@ sync
 С версии 1.0 брендинг **записан файлами в реальный `/system`** — без Magisk.
 Папки `zerobrand/`, `zerosettings/`, `zeroupdater/`, `zerocabout/` остались
 сборщиками артефактов; модули из первых трёх больше не устанавливаются.
+Установщики лежат в `patch/` (только изменённые файлы) и `full/` (весь образ
+`system.img` для TWRP).
 
 | Файл в `/system` | Что |
 |---|---|
@@ -458,18 +460,28 @@ powershell -File zerobrand\logo\build_overlay.ps1                 # RRO-овер
 .\zeroupdater\build.ps1                                           # Updater.apk
 ```
 
-Установка — два взаимозаменяемых способа (подробности в
-`zerobrand/README.md`):
+Установка — три способа (подробности в `zerobrand/README.md`):
 
 ```powershell
-# 1) патч-zip поверх уже стоящей LineageOS 17.1 (~40 МБ), ставится в TWRP
+# 1) полный zip для TWRP: весь system.img внутри, ставится как ROM (~0,55 ГБ)
+7z x dist\ZerOS-I-1.0-marmite-system.img.7z -oC:\work\zos
+.\make_full_zip.ps1 -SystemImg C:\work\zos\system.img
+adb push dist\ZerOS-I-1.0-marmite-full.zip /sdcard/
+
+# 2) патч-zip поверх уже стоящей LineageOS 17.1 (~40 МБ), ставится в TWRP
 .\make_patch_zip.ps1 -BuildProp C:\work\sys\build.prop.new
 adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
 
-# 2) полный образ system (449 МБ в 7z, 3,5 ГБ внутри) — fastboot flash system
+# 3) полный образ system (449 МБ в 7z, 3,5 ГБ внутри) — fastboot flash system
 7z x dist\ZerOS-I-1.0-marmite-system.img.7z
 fastboot flash system system.img
 ```
+
+Полный zip пишет образ напрямую в раздел (`unzip -p … | dd`), затем читает
+раздел обратно и сверяет md5, после чего чистит `/data/system/package_cache`
+и `/data/resource-cache`. Установщик — `full/META-INF/.../update-binary`,
+сборка — `make_full_zip.ps1` (образ сжат deflate внутри zip).
+
 
 `boot`, `vendor` и `recovery` в релиз не входят и не прошиваются. Образ снят
 с раздела при смонтированном ro `/system`, `e2fsck -fn` чистый, md5 файлов

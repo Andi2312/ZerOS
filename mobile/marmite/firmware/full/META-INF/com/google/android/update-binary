@@ -1,0 +1,76 @@
+#!/sbin/sh
+#
+# ZerOS I 1.0 - Wileyfox Swift 2 (marmite).
+# Full system install for TWRP: writes the whole system image.
+# boot, vendor, recovery and splash are not touched, so root (Magisk)
+# survives and nothing has to be reinstalled afterwards.
+#
+# Zip layout:
+#   system.img        raw ext4 image of the system partition
+#   README.txt        this text in Russian
+#   META-INF/...      this script
+#
+# The image is written straight to the block device, read back and checked
+# against its md5. Then the package/resource caches of Android 10 are
+# dropped: they are considered valid by directory mtime, and a system that
+# changed under the same paths would otherwise reuse stale parsed packages.
+
+OUTFD="$2"
+ZIPFILE="$3"
+
+MD5_EXPECT="fcfd45bfdcb04f28e5f2721090bb02bb"
+IMG_BYTES=3758096384
+IMG_BLOCKS=896                     # 896 * 4 MiB = 3758096384
+
+ui_print() {
+  echo "ui_print $1" >&"$OUTFD"
+  echo "ui_print" >&"$OUTFD"
+}
+
+die() {
+  ui_print " "
+  ui_print "ERROR: $1"
+  ui_print "Install stopped."
+  exit 1
+}
+
+ui_print "ZerOS I 1.0 - Wileyfox Swift 2 (marmite)"
+ui_print "Full system install: system.img"
+ui_print " "
+
+PORT=1
+PART=/dev/block/bootdevice/by-name/system
+[ -e "$PART" ] || PART=/dev/block/platform/soc/7824900.sdhci/by-name/system
+[ -e "$PART" ] || die "system partition not found"
+
+ui_print "Unmounting system..."
+umount /system 2>/dev/null
+umount /system_root 2>/dev/null
+umount /mnt/zerosys 2>/dev/null
+
+PSIZE=$(blockdev --getsize64 "$PART" 2>/dev/null)
+if [ -n "$PSIZE" ] && [ "$PSIZE" != "$IMG_BYTES" ]; then
+  ui_print "Warning: partition is $PSIZE bytes, image is $IMG_BYTES"
+fi
+
+ui_print "Writing system image (3.5 GB, this takes a few minutes)..."
+unzip -p "$ZIPFILE" system.img | dd of="$PART" bs=4194304 2>/dev/null
+[ $? -eq 0 ] || die "writing system.img failed"
+sync
+
+ui_print "Verifying (reading the partition back)..."
+GOT=$(dd if="$PART" bs=4194304 count=$IMG_BLOCKS 2>/dev/null | md5sum | cut -d' ' -f1)
+[ "$GOT" = "$MD5_EXPECT" ] || die "system image does not match (md5 $GOT)"
+sync
+
+ui_print "Clearing package and resource caches..."
+if [ -d /data/system/package_cache ]; then
+  rm -rf /data/system/package_cache/* 2>/dev/null
+fi
+if [ -d /data/resource-cache ]; then
+  rm -rf /data/resource-cache/* 2>/dev/null
+fi
+
+ui_print " "
+ui_print "Done. Reboot to system (first boot 2-5 minutes)."
+ui_print "Check: Settings - About phone - ZerOS version 1.0"

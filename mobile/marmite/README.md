@@ -42,8 +42,9 @@
 
 `firmware/` — `flash_los.ps1` и заметки: разблокировка, TWRP, Magisk, прошивка
 LineageOS; сборка брендинга (`zerobrand`, `zerosettings`, `zeroupdater`,
-`zerocabout` — приложение «О телефоне») и `make_patch_zip.ps1` — патч-zip с
-брендингом для TWRP.
+`zerocabout` — приложение «О телефоне»), `make_full_zip.ps1` — полный zip
+системы для TWRP и `make_patch_zip.ps1` — патч-zip только с изменёнными
+файлами.
 
 `home/` — заметка о домашнем экране: эксперименты с лаунчерами (HomeWatch,
 ZerHome) удалены, их исходники остались в истории git.
@@ -59,7 +60,7 @@ Root (Magisk) больше не нужен для брендинга: файлы
 
 Полный порядок — в `firmware/README.md`. Кратко: разблокировка загрузчика →
 TWRP с datafix → LineageOS 17.1 через `flash_los.ps1` → Magisk 31.0 →
-брендинг: патч-zip в TWRP или полный `system.img` через fastboot.
+брендинг: полный zip системы в TWRP (или патч-zip поверх LineageOS).
 
 Не трогаем: `preloader`, `lk`, `seccfg`, раздел `recovery` (TWRP остаётся
 рабочим).
