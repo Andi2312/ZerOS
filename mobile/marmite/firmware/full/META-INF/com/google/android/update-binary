@@ -1,26 +1,24 @@
 #!/sbin/sh
 #
 # ZerOS I 1.0 - Wileyfox Swift 2 (marmite).
-# Full system install for TWRP: writes the whole system image.
-# boot, vendor, recovery and splash are not touched, so root (Magisk)
-# survives and nothing has to be reinstalled afterwards.
+# Full ROM install for TWRP: boot, vendor and system are written from images.
 #
 # Zip layout:
-#   system.img        raw ext4 image of the system partition
-#   README.txt        this text in Russian
+#   md5sums.txt       md5 of every image (name matches the partition)
+#   boot.img          raw image for the boot partition
+#   vendor.img        raw image for the vendor partition
+#   system.img        raw image for the system partition
+#   README.txt        Russian description
 #   META-INF/...      this script
 #
-# The image is written straight to the block device, read back and checked
-# against its md5. Then the package/resource caches of Android 10 are
-# dropped: they are considered valid by directory mtime, and a system that
-# changed under the same paths would otherwise reuse stale parsed packages.
+# Each image is streamed straight to its block device, then the partition is
+# read back and checked against md5sums.txt. After that the package/resource
+# caches of Android 10 are dropped: they are considered valid by directory
+# mtime, and a system replaced under the same paths would otherwise reuse
+# stale parsed packages.
 
 OUTFD="$2"
 ZIPFILE="$3"
-
-MD5_EXPECT="fcfd45bfdcb04f28e5f2721090bb02bb"
-IMG_BYTES=3758096384
-IMG_BLOCKS=896                     # 896 * 4 MiB = 3758096384
 
 ui_print() {
   echo "ui_print $1" >&"$OUTFD"
@@ -34,34 +32,66 @@ die() {
   exit 1
 }
 
+part_of() {
+  case "$1" in
+    boot)   PART=/dev/block/bootdevice/by-name/boot ;;
+    system) PART=/dev/block/bootdevice/by-name/system ;;
+    vendor)
+      # marmite has no "vendor" entry in by-name: the partition is
+      # /dev/block/mmcblk0p30 (256 MiB, squashfs) and Android mounts it
+      # by device number.
+      if [ -e /dev/block/bootdevice/by-name/vendor ]; then
+        PART=/dev/block/bootdevice/by-name/vendor
+      elif [ -e /dev/block/platform/soc/7824900.sdhci/by-name/vendor ]; then
+        PART=/dev/block/platform/soc/7824900.sdhci/by-name/vendor
+      else
+        PART=/dev/block/mmcblk0p30
+      fi
+      ;;
+  esac
+  [ -e "$PART" ]
+}
+
+image_size() {
+  unzip -l "$ZIPFILE" | awk -v f="$1" '$NF == f { print $1; exit }'
+}
+
 ui_print "ZerOS I 1.0 - Wileyfox Swift 2 (marmite)"
-ui_print "Full system install: system.img"
+ui_print "Full install: boot, vendor, system"
 ui_print " "
 
-PORT=1
-PART=/dev/block/bootdevice/by-name/system
-[ -e "$PART" ] || PART=/dev/block/platform/soc/7824900.sdhci/by-name/system
-[ -e "$PART" ] || die "system partition not found"
+TMP=/tmp/zerofull
+rm -rf "$TMP"
+mkdir -p "$TMP" || die "cannot create $TMP"
+unzip -p "$ZIPFILE" md5sums.txt > "$TMP/md5sums.txt" 2>/dev/null
+[ -s "$TMP/md5sums.txt" ] || die "archive has no md5sums.txt"
 
-ui_print "Unmounting system..."
+ui_print "Unmounting partitions..."
 umount /system 2>/dev/null
 umount /system_root 2>/dev/null
+umount /vendor 2>/dev/null
+umount /mnt/vendor 2>/dev/null
 umount /mnt/zerosys 2>/dev/null
 
-PSIZE=$(blockdev --getsize64 "$PART" 2>/dev/null)
-if [ -n "$PSIZE" ] && [ "$PSIZE" != "$IMG_BYTES" ]; then
-  ui_print "Warning: partition is $PSIZE bytes, image is $IMG_BYTES"
-fi
+for img in boot.img vendor.img system.img; do
+  name=${img%.img}
+  part_of "$name" || die "$name partition not found"
 
-ui_print "Writing system image (3.5 GB, this takes a few minutes)..."
-unzip -p "$ZIPFILE" system.img | dd of="$PART" bs=4194304 2>/dev/null
-[ $? -eq 0 ] || die "writing system.img failed"
-sync
+  SIZE=$(image_size "$img")
+  [ -n "$SIZE" ] || die "$img not found in the archive"
+  SUM=$(awk -v f="$img" '$2 == f { print $1; exit }' "$TMP/md5sums.txt")
+  [ -n "$SUM" ] || die "$img has no md5 in md5sums.txt"
 
-ui_print "Verifying (reading the partition back)..."
-GOT=$(dd if="$PART" bs=4194304 count=$IMG_BLOCKS 2>/dev/null | md5sum | cut -d' ' -f1)
-[ "$GOT" = "$MD5_EXPECT" ] || die "system image does not match (md5 $GOT)"
-sync
+  ui_print "Writing $name ($SIZE bytes)..."
+  unzip -p "$ZIPFILE" "$img" | dd of="$PART" bs=4194304 2>/dev/null
+  [ $? -eq 0 ] || die "writing $img failed"
+  sync
+
+  ui_print "Verifying $name..."
+  GOT=$(head -c "$SIZE" "$PART" | md5sum | cut -d' ' -f1)
+  [ "$GOT" = "$SUM" ] || die "$img does not match (md5 $GOT)"
+  sync
+done
 
 ui_print "Clearing package and resource caches..."
 if [ -d /data/system/package_cache ]; then
@@ -70,6 +100,8 @@ fi
 if [ -d /data/resource-cache ]; then
   rm -rf /data/resource-cache/* 2>/dev/null
 fi
+
+rm -rf "$TMP"
 
 ui_print " "
 ui_print "Done. Reboot to system (first boot 2-5 minutes)."

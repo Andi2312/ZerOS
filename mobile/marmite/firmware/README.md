@@ -382,12 +382,12 @@ LineageOS 17.1: инсталлятор сам распаковал стоков�
 (`Legacy SAR`, `System-as-root`, `keep dm-verity`), пропатчил ramdisk и записал
 обратно в `boot`. Проверено на системе: `magisk -v` → `31.0:MAGISK:D`.
 
-**В релиз root не входит.** ZerOS работает без него: брендинг и
-приложения лежат файлами в `/system`, Magisk-модули не нужны. «Встроить» Magisk
-означало бы прошить пропатченный `boot.img` — это привязка релиза к одной
-сборке LineageOS 17.1 и риск кирпича при несовпадении, поэтому в патч и образ
-`boot` не входит (и по правилам TK-P86 не прошивается). Нужен root — ставится
-отдельно, zip-ом Magisk в TWRP, как описано выше.
+**Root в прошивку не входит.** ZerOS работает без него: брендинг и приложения
+лежат файлами в `/system`, Magisk-модули не нужны. В полный zip входит
+**стоковый** `boot.img` от LineageOS 17.1 (без Magisk) — прошивка ставится
+как обычная, но root при этом слетает; нужен root — после прошивки поставить
+zip Magisk в TWRP, он пропатчит boot сам. В патч-zip и `system.img` boot не
+входит, они живут на уже установленном boot.
 
 Файлы в `magisk\` — от прежней системы (crDroid), **для текущей прошивки они
 уже не актуальны**, оставлены как история:
@@ -463,9 +463,12 @@ powershell -File zerobrand\logo\build_overlay.ps1                 # RRO-овер
 Установка — три способа (подробности в `zerobrand/README.md`):
 
 ```powershell
-# 1) полный zip для TWRP: весь system.img внутри, ставится как ROM (~0,55 ГБ)
+# 1) полный zip для TWRP: boot + vendor + system, как обычная прошивка (~0,75 ГБ)
 7z x dist\ZerOS-I-1.0-marmite-system.img.7z -oC:\work\zos
-.\make_full_zip.ps1 -SystemImg C:\work\zos\system.img
+#   boot.img — из zip LineageOS 17.1, vendor.img — дамп раздела vendor (squashfs)
+.\make_full_zip.ps1 -SystemImg C:\work\zos\system.img `
+                    -BootImg C:\work\zos\boot.img `
+                    -VendorImg C:\work\zos\vendor.img
 adb push dist\ZerOS-I-1.0-marmite-full.zip /sdcard/
 
 # 2) патч-zip поверх уже стоящей LineageOS 17.1 (~40 МБ), ставится в TWRP
@@ -477,15 +480,17 @@ adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
 fastboot flash system system.img
 ```
 
-Полный zip пишет образ напрямую в раздел (`unzip -p … | dd`), затем читает
-раздел обратно и сверяет md5, после чего чистит `/data/system/package_cache`
-и `/data/resource-cache`. Установщик — `full/META-INF/.../update-binary`,
-сборка — `make_full_zip.ps1` (образ сжат deflate внутри zip).
+Полный zip пишет каждый образ напрямую в раздел (`unzip -p … | dd`), затем
+читает раздел обратно и сверяет md5 (суммы — в `md5sums.txt` внутри архива),
+после чего чистит `/data/system/package_cache` и `/data/resource-cache`.
+Установщик — `full/META-INF/.../update-binary`, сборка — `make_full_zip.ps1`.
 
-
-`boot`, `vendor` и `recovery` в релиз не входят и не прошиваются. Образ снят
-с раздела при смонтированном ro `/system`, `e2fsck -fn` чистый, md5 файлов
-внутри сверены с исходниками.
+`boot` и `vendor` входят в полный zip стоковыми от LineageOS 17.1: `boot.img`
+берётся из zip-а LOS (`lineage-17.1-marmite.zip`), `vendor.img` снят с раздела
+(`/dev/block/mmcblk0p30`, 256 МБ, squashfs) — в by-name записи `vendor` нет,
+поэтому установщик пишет в этот блок напрямую. `recovery` и `splash` не
+трогаются. Образ system снят с раздела при смонтированном ro `/system`,
+`e2fsck -fn` чистый, md5 файлов внутри сверены с исходниками.
 
 Загрузочная анимация — клип `zerobrand\bootanimation\zeros.mp4` (720×1280,
 30 fps, 4,5 с): чёрный фон, wordmark «ZeroS» и медленно плывущие белые линии.

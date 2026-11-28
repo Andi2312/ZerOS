@@ -204,27 +204,31 @@ adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
 `/mnt/zerosys`, ищет каталог с `build.prop` и `product/overlay`), копирует
 прежние файлы в `/sdcard/zerobak-patch-<дата>/`, проверяет md5 после записи.
 
-**2. Полный zip для TWRP** (весь образ `system.img` внутри, ~0,55 ГБ):
-собирается `make_full_zip.ps1`, ставится как обычная прошивка — TWRP →
-Install → zip → Reboot. Установщик пишет образ в раздел, сверяет md5 и чистит
-кэши пакетов. В релизе `marmite` лежит именно он.
+**2. Полный zip для TWRP** (`boot` + `vendor` + `system`, ~0,75 ГБ): полная
+прошивка, собирается `make_full_zip.ps1`, ставится как обычная — TWRP →
+Install → zip → Reboot. Установщик пишет каждый образ в раздел, сверяет md5
+по `md5sums.txt` и чистит кэши пакетов. В релизе `marmite` лежит именно он.
 
 ```powershell
 7z x dist\ZerOS-I-1.0-marmite-system.img.7z -oC:\work\zos
-.\make_full_zip.ps1 -SystemImg C:\work\zos\system.img
+# boot.img — из zip LineageOS 17.1, vendor.img — dd с /dev/block/mmcblk0p30
+.\make_full_zip.ps1 -SystemImg C:\work\zos\system.img `
+                    -BootImg C:\work\zos\boot.img `
+                    -VendorImg C:\work\zos\vendor.img
 adb push dist\ZerOS-I-1.0-marmite-full.zip /sdcard/
 ```
 
-Запасной вариант — тот же образ через fastboot:
+Запасной вариант — только системный образ через fastboot:
 
 ```powershell
 7z x ZerOS-I-1.0-marmite-system.img.7z
 fastboot flash system system.img
 ```
 
-`boot`, `vendor` и `recovery` не входят и не трогаются. Образ снят с
-работающего раздела (`dd` при смонтированном ro `/system`), `e2fsck -fn`
-чистый, md5 файлов внутри сверены с исходниками.
+`boot` и `vendor` в полном zip — стоковые от LineageOS 17.1, root в прошивку
+не входит (Magisk ставится после, zip-ом в TWRP). `recovery` и `splash` не
+трогаются. Образ снят с работающего раздела (`dd` при смонтированном ro
+`/system`), `e2fsck -fn` чистый, md5 файлов внутри сверены с исходниками.
 
 Ручной путь (adb + root), если нет ни TWRP под рукой, ни желания шить образ:
 перемонтировать раздел (`mount -o rw /dev/block/bootdevice/by-name/system
