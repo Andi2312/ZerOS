@@ -43,7 +43,8 @@ marmite не действуют: `/vendor` — squashfs только для чт
 Исходные значения (для возврата): `lineage_marmite`, `17.1-20210703-UNOFFICIAL-marmite`,
 `UNOFFICIAL`, `17.1`, sdk `9`.
 
-Версия здесь — **ZerOS I 1.0**: то же число, что в теге `marmite/I-1.0`. Схема
+Версия здесь — **ZerOS I 1.0**: то же число, что в имени файла релиза
+(`marmite`). Схема
 версий — в `../../../docs/versions.md`.
 
 ### Загрузочная анимация
@@ -206,7 +207,7 @@ adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
 **2. Полный zip для TWRP** (весь образ `system.img` внутри, ~0,55 ГБ):
 собирается `make_full_zip.ps1`, ставится как обычная прошивка — TWRP →
 Install → zip → Reboot. Установщик пишет образ в раздел, сверяет md5 и чистит
-кэши пакетов. В релизе `marmite/I-1.0` лежит именно он.
+кэши пакетов. В релизе `marmite` лежит именно он.
 
 ```powershell
 7z x dist\ZerOS-I-1.0-marmite-system.img.7z -oC:\work\zos
