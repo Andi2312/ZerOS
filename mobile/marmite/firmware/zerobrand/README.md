@@ -43,7 +43,7 @@ marmite не действуют: `/vendor` — squashfs только для чт
 Исходные значения (для возврата): `lineage_marmite`, `17.1-20210703-UNOFFICIAL-marmite`,
 `UNOFFICIAL`, `17.1`, sdk `9`.
 
-Версия здесь — **ZerOS I 1.0**: то же число, что в теге `I-1.0`. Схема
+Версия здесь — **ZerOS I 1.0**: то же число, что в теге `I-1.0-marmite`. Схема
 версий — в `../../../docs/versions.md`.
 
 ### Загрузочная анимация
@@ -203,9 +203,18 @@ adb push dist\ZerOS-I-1.0-marmite-patch.zip /sdcard/
 `/mnt/zerosys`, ищет каталог с `build.prop` и `product/overlay`), копирует
 прежние файлы в `/sdcard/zerobak-patch-<дата>/`, проверяет md5 после записи.
 
-**2. Полный образ system** (с нуля, без базовой LOS — только system):
-в релизе лежит `ZerOS-I-1.0-marmite-system.img.7z` (3,5 ГБ → 449 МБ),
-внутри — образ раздела:
+**2. Полный zip для TWRP** (весь образ `system.img` внутри, ~0,55 ГБ):
+собирается `make_full_zip.ps1`, ставится как обычная прошивка — TWRP →
+Install → zip → Reboot. Установщик пишет образ в раздел, сверяет md5 и чистит
+кэши пакетов. В релизе `I-1.0-marmite` лежит именно он.
+
+```powershell
+7z x dist\ZerOS-I-1.0-marmite-system.img.7z -oC:\work\zos
+.\make_full_zip.ps1 -SystemImg C:\work\zos\system.img
+adb push dist\ZerOS-I-1.0-marmite-full.zip /sdcard/
+```
+
+Запасной вариант — тот же образ через fastboot:
 
 ```powershell
 7z x ZerOS-I-1.0-marmite-system.img.7z
