@@ -7,8 +7,13 @@
 
 ## Что показывает
 
-Material Design 2: верхняя панель, три вкладки и карточки. Логотипа в шапке нет,
-только название и версия.
+Настоящий Material Design 2: библиотека
+`com.google.android.material:material:1.4.0` (ветка MD2; MD3 начинается с
+1.5). Компоненты — `MaterialToolbar` с подзаголовком в `AppBarLayout`,
+`TabLayout` с тремя вкладками, `MaterialCardView` с карточками и
+`MaterialButton` («Обновления»). Логотипа в шапке нет — только название и
+версия; цвета и шрифт заданы темой `Theme.MaterialComponents.NoActionBar`
+(розовый `colorPrimary`, тёмная поверхность, Rubik).
 
 | Вкладка | Строки |
 |---|---|
@@ -43,28 +48,40 @@ Material Design 2: верхняя панель, три вкладки и кар�
 ## Иконка
 
 Адаптивная иконка: розовый фон `#E6125E` и белый знак справки «?»
-(`res/drawable-nodpi/ic_foreground.png`). Знак нарисован Rubik Bold и вписан в
-безопасную зону маски.
+(`src/main/res/drawable-nodpi/ic_foreground.png`). Знак нарисован Rubik Bold и
+вписан в безопасную зону маски.
+
+## Структура
+
+```
+build.gradle.kts        Gradle: AGP 8.5.2, compileSdk 34, material 1.4.0
+settings.gradle.kts
+gradlew, gradlew.bat    обёртка Gradle 8.7
+gradle/wrapper/
+src/main/AndroidManifest.xml
+src/main/java/org/zeroc/about/MainActivity.java
+src/main/res/           layout, values (тема, цвета, строки), иконка
+build.ps1               сборка + подпись (см. ниже)
+```
 
 ## Сборка
 
-Без Gradle: `aapt2`, `javac`, `dx`, `zipalign`, `apksigner`. Нужны JDK,
-минимальный Android SDK (platform 29 и build-tools 29.0.3) и платформенный
-ключ AOSP.
+Нужны JDK 17+ и минимальный Android SDK: `platforms/android-34` и
+`build-tools/34.0.0`, плюс платформенный ключ AOSP.
 
 ```powershell
 .\build.ps1
 # свои пути: .\build.ps1 -Sdk D:\android -KeysDir D:\keys
 ```
 
-Скрипт копирует `res`, `src` и манифест во временный ASCII-каталог: `aapt2` и
-`apksigner` не открывают кириллические пути. `classes.dex` добавляется в APK
-через 7-Zip (ZipArchive в режиме Update портит архив), затем `zipalign -p -f 4`
-и подпись `platform.pk8`/`platform.x509.pem`. Подпись платформенная
+`build.ps1` копирует проект в ASCII-временный каталог (Gradle и `aapt2` не
+работают с кириллицей), пишет `local.properties`, запускает
+`gradlew assembleRelease`, затем выравнивает `zipalign -p -f 4` и подписывает
+`apksigner` ключом `platform.pk8`/`platform.x509.pem`. Подпись платформенная
 (SHA-256 `c8a2e9bc…2ab8`), как у системных приложений.
 
-Готовый APK — `dist\ZerOSAbout.apk` (~25 КБ). В патч-zip и образ попадает он
-же; путь в патче — `system/priv-app/ZerOSAbout/ZerOSAbout.apk`.
+Готовый APK — `dist\ZerOSAbout.apk`. В патч-zip и образ попадает он же; путь в
+патче — `system/priv-app/ZerOSAbout/ZerOSAbout.apk`.
 
 ## Установка
 
@@ -74,14 +91,23 @@ Material Design 2: верхняя панель, три вкладки и кар�
 
 ```powershell
 adb push dist\ZerOSAbout.apk /data/local/tmp/ZerOSAbout.apk
-adb shell su -c "mount -o rw /dev/block/bootdevice/by-name/system /mnt/zerosys"
-adb shell su -c "mkdir -p /mnt/zerosys/system/priv-app/ZerOSAbout"
-adb shell su -c "cp /data/local/tmp/ZerOSAbout.apk /mnt/zerosys/system/priv-app/ZerOSAbout/ZerOSAbout.apk"
-adb shell su -c "chmod 644 /mnt/zerosys/system/priv-app/ZerOSAbout/ZerOSAbout.apk"
-adb shell su -c "chown 0:0 /mnt/zerosys/system/priv-app/ZerOSAbout/ZerOSAbout.apk"
-adb shell su -c "chcon u:object_r:system_file:s0 /mnt/zerosys/system/priv-app/ZerOSAbout/ZerOSAbout.apk"
+adb shell su -c "mount -o remount,rw /"
+adb shell su -c "mkdir -p /system/priv-app/ZerOSAbout"
+adb shell su -c "cp /data/local/tmp/ZerOSAbout.apk /system/priv-app/ZerOSAbout/ZerOSAbout.apk"
+adb shell su -c "chmod 644 /system/priv-app/ZerOSAbout/ZerOSAbout.apk"
+adb shell su -c "chown 0:0 /system/priv-app/ZerOSAbout/ZerOSAbout.apk"
+adb shell su -c "chcon u:object_r:system_file:s0 /system/priv-app/ZerOSAbout/ZerOSAbout.apk"
+adb shell su -c "touch /system/priv-app/ZerOSAbout; rm -f /data/system/package_cache/ZerOSAbout-*"
+adb shell su -c "mount -o remount,ro /"
 adb reboot
 ```
+
+`touch` каталога и удаление `/data/system/package_cache/ZerOSAbout-*` обязательны:
+Android 10 кэширует разобранный пакет системного приложения и считает кэш
+валидным по mtime каталога, а `cp` поверх файла mtime не меняет — без этого
+шага после перезагрузки берётся старый разбор и приложение падает
+(«You need to use a Theme.AppCompat theme»). Общий установщик
+(`..\patch`) делает это сам.
 
 Перед перезагрузкой удалить пользовательскую копию, если она ставилась для
 проверки: `adb uninstall org.zeroc.about`.
@@ -102,3 +128,5 @@ adb shell am start -n org.zeroc.about/.MainActivity --ei tab 1   # 0 систе�
   статус на сервере LineageOS.
 - Кнопка «Обновления» открывает `org.lineageos.updater`; если обновлятор
   удалён, нажатие ничего не делает.
+- APK с AndroidX/Material весит больше прежней ручной сборки (около 1 МБ
+  вместо 25 КБ) — это цена настоящих компонентов MD2.

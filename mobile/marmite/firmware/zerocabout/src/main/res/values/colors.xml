@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="zer_bg">#14171A</color>
+    <color name="zer_surface">#1E2427</color>
+    <color name="zer_accent">#E6125E</color>
+    <color name="zer_accent_dark">#B00E4A</color>
+    <color name="zer_divider">#2A3033</color>
+    <color name="zer_muted">#9AA0A6</color>
+    <color name="zer_footer">#6E7478</color>
+    <color name="zer_on_primary_muted">#CCFFFFFF</color>
+    <color name="white">#FFFFFFFF</color>
+</resources>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Rubik everywhere; sizes and weights follow the MD2 type scale. -->
+    <style name="TextAppearance.Zer.Title" parent="TextAppearance.MaterialComponents.Headline6">
+        <item name="android:fontFamily">rubik</item>
+    </style>
+
+    <style name="TextAppearance.Zer.Subtitle" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:fontFamily">rubik</item>
+        <item name="android:letterSpacing">0.08</item>
+    </style>
+
+    <style name="TextAppearance.Zer.Tab" parent="TextAppearance.MaterialComponents.Button">
+        <item name="android:fontFamily">rubik</item>
+        <item name="android:textSize">14sp</item>
+    </style>
+
+    <style name="TextAppearance.Zer.Label" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:fontFamily">rubik</item>
+    </style>
+
+    <style name="TextAppearance.Zer.Value" parent="TextAppearance.MaterialComponents.Body1">
+        <item name="android:fontFamily">rubik</item>
+    </style>
+
+    <style name="TextAppearance.Zer.Footer" parent="TextAppearance.MaterialComponents.Caption">
+        <item name="android:fontFamily">rubik</item>
+        <item name="android:textColor">@color/zer_footer</item>
+    </style>
+
+    <style name="Zer.Card" parent="Widget.MaterialComponents.CardView">
+        <item name="cardBackgroundColor">?attr/colorSurface</item>
+        <item name="cardCornerRadius">8dp</item>
+        <item name="cardElevation">1dp</item>
+    </style>
+
+</resources>

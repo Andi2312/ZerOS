@@ -117,6 +117,17 @@ for f in build.prop \
     *)                 CTX=u:object_r:system_file:s0 ;;
   esac
   command -v chcon >/dev/null 2>&1 && chcon "$CTX" "$SYS/$f" 2>/dev/null
+
+  # Android caches the parsed package of a system app in
+  # /data/system/package_cache and treats the entry as valid while the app
+  # directory's mtime is not newer than the cache file. Overwriting a file in
+  # place keeps the directory mtime, so the stale entry (with the old app's
+  # resources) would be reused and the app would crash on first boot. Refresh
+  # the directory mtime and drop the matching cache entry.
+  appdir=$(dirname "$f")
+  touch "$SYS/$appdir" 2>/dev/null
+  rm -f "/data/system/package_cache/$(basename "$appdir")-"* 2>/dev/null
+
   ui_print "  $f"
 done
 

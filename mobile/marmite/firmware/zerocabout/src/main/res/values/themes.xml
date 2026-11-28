@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Material Design 2 dark theme, ZerOS palette. -->
+    <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
+        <item name="colorPrimary">@color/zer_accent</item>
+        <item name="colorPrimaryVariant">@color/zer_accent_dark</item>
+        <item name="colorOnPrimary">@color/white</item>
+        <item name="colorSecondary">@color/zer_accent</item>
+        <item name="colorSecondaryVariant">@color/zer_accent_dark</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSurface">@color/zer_surface</item>
+        <item name="colorOnSurface">@color/white</item>
+        <item name="colorOnBackground">@color/white</item>
+        <item name="android:colorBackground">@color/zer_bg</item>
+        <item name="android:windowBackground">@color/zer_bg</item>
+        <item name="android:statusBarColor">@color/zer_accent_dark</item>
+        <item name="android:navigationBarColor">@color/zer_bg</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">@color/zer_muted</item>
+        <item name="android:textColorTertiary">@color/zer_muted</item>
+        <item name="titleTextAppearance">@style/TextAppearance.Zer.Title</item>
+        <item name="subtitleTextAppearance">@style/TextAppearance.Zer.Subtitle</item>
+        <item name="tabTextAppearance">@style/TextAppearance.Zer.Tab</item>
+        <item name="fontFamily">rubik</item>
+    </style>
+
+</resources>

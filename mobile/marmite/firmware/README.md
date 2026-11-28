@@ -532,19 +532,23 @@ APK; отдельная установка модулем больше не ну
 
 Отдельное приложение `org.zeroc.about` в
 `/system/priv-app/ZerOSAbout/ZerOSAbout.apk` — своя иконка «О телефоне» в меню
-приложений. Показывает живые данные устройства (версия Android, патч
-безопасности, ядро, сборка, модель, экран, память, накопитель) и блок ZerOS
-(поколение, версия, тип сборки, Lineage SDK), кнопку «Обновления» и шапку
-`ZerOS` с розовым акцентом и Rubik. Штатный экран в настройках не меняется.
+приложений. Настоящий Material Design 2 (`MaterialToolbar`, `TabLayout`,
+`MaterialCardView`, `MaterialButton` из `com.google.android.material:1.4.0`):
+вкладки «Система», «Устройство», «ZerOS», розовый `colorPrimary`, Rubik.
+Показывает живые данные устройства (версия Android, патч безопасности, ядро,
+сборка, модель, экран, память, накопитель) и блок ZerOS (поколение, версия,
+тип сборки, Lineage SDK), кнопку «Обновления». Штатный экран в настройках не
+меняется.
 
 ```powershell
 .\zerocabout\build.ps1          # → zerocabout\dist\ZerOSAbout.apk
 ```
 
-Собирается без Gradle: `aapt2` + `javac` + `dx` + `zipalign` + `apksigner`,
-нужен минимальный SDK (platform 29 и build-tools 29.0.3) и платформенный
-ключ. Сборка идёт во временном ASCII-каталоге — `aapt2` не открывает
-кириллические пути. Подробности — в `zerocabout/README.md`.
+Собирается Gradle (AGP 8.5.2, `compileSdk 34`): нужны JDK 17+ и минимальный
+SDK (`platforms/android-34`, `build-tools/34.0.0`) и платформенный ключ.
+Сборка идёт во временном ASCII-каталоге — Gradle и `aapt2` не работают с
+кириллицей; после сборки APK выравнивается и подписывается. Подробности — в
+`zerocabout/README.md`.
 
 ## Важно
 
